@@ -1,7 +1,7 @@
 //#define EIGENLIB            // uncomment to use Eigen linear algebra library
 //#define NO_POINTER_INIT    // uncomment to disable pointer checking
 
-#include "fun_macro_compat.h"
+//#include "fun_macro_compat.h"
 #include "fun_head.h"
 #include "fun_support.h"
 
