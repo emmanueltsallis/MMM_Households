@@ -1,0 +1,365 @@
+MICRO-MACRO MULTISECTORAL MODEL - HOUSEHOLDS DISAGGREGATION (ver. 4.0)
+
+*********************************************************************************************************************************************
+
+This is a (preliminary) new version of the model created by Dweck (2006) and used in Dweck, Vianna and Barbosa (2018). 
+Coded and copyright by Matheus Vianna.
+
+*********************************************************************************************************************************************
+
+ORIGIN:
+
+The origin of the MMM model can be traced back to Mario Possas's Ph.D. Thesis (Possas 1983). In order to explain the main components of the dynamics of a capitalist economy, Possas combines theoretical propositions of three of the most influential economists of the twentieth century: John Maynard Keynes, Michail Kalecki and Joseph Schumpeter. 
+Possas stablishes a multisectoral model where basic units are the sectors and intersectoral relationships give birth to dynamics, not only sectoral but also aggregated. The model was based on input-output matrices to determine sectoral conponents of the intermediate consumption of each sector. 
+As highligthed by the author, the model was already very complex and it would require a solution by computer simulation. However, due to the inexistent computation and processing power at that time, he opted for analytical solution. Only at the end of 90's the author started to work again in the model, now with enough computational power to use numeric solution. 
+Possas and Dweck (2004) presented the consolidated MMM model for the first time while Dweck (2006) did an extensive analysis of the dynamic properties.
+
+
+MODEL DESCRIPTION AND FEATURES:
+
+The MMM model is a multisectoral micro-macro dynamic model of simulation, that combines theorectical foundations from pos-keynesian, kaleckian and schumpeterian
+approaches, useful to investigate general dynamic properties of capitalist economies.
+
+Multisectoral: most of the general dynamic properties derives from the intersectoral relationships, using input-output matrices to determine intersectoral demands. Additionally, a matrix of income apropriation determines income distribution among dierent classes from functional distribution. Sectors basically differ by how they fit in the productive chain, which can be capital goods production, intermediate goods production or consumption goods production. Sectoral demands are determined endogenously by firms and income classes decisions.
+	The core version runs with the minimum number of sector of each type (1), but the model can be generalized for more than one sector of each type, employing input-output matrices to generate sectoral demands, as proposed by Possas (1983). The number of income classes can also be generalized.  
+	Additionally, the model have two "exoneous" blocks that were simplified in the core version: Government and External Sector.
+
+1. Dynamic:
+
+The model generates dynamic trajectories in discrete time steps. It is a disequilibrium model—no equilibrium condition is imposed at any point. The basic time unit corresponds to a production period for firms, which can be understood as one quarter in chronological time. During each time step:
+
+	1.1. Individuals (Households) make consumption, saving, and labor-supply decisions based on their incomes and expectations.
+
+	1.2. Firms plan and carry out production—using their capacity, labor, and intermediate inputs—and may also adjust other strategies (e.g., investment, markups) according to preset frequencies or triggers.
+
+Some decisions (e.g., investment in new capital, markup adjustments) may occur less frequently than the production itself, capturing the real-world lag between planning and implementation. The model thus remains inherently disequilibrium-based, with no requirement that supply and demand balance exactly in any market each period.
+
+2. Micro-Macro:
+
+Decisions occur at both the household and firm levels, reflecting the microeconomic behaviors of these agents. The outcomes of these decisions aggregate to influence sectoral and macroeconomic dynamics. Similarly, the sectoral and macro structures provide feedback mechanisms that influence the decisions of households and firms, ensuring a dynamic interaction between micro and macro levels.
+
+3. Theoretical:
+
+The main goal of the model is to investigate the general dynamic properties of capitalist economies, so the results are general, theoretical, representing only the essential elements of a non-specific capitalist economy. Historical, national, and institutional particularities are, most of the time, omitted from the model.
+
+4. Agent-Based: 
+
+Households and firms are the main agents. Households represent individual economic units, making decisions about consumption, savings, and labor supply based on their incomes, preferences, and expectations. Firms, belonging to distinct sectors, drive structural changes endogenously, influenced by technological and strategic diversity. These agents interact dynamically, with decisions at the micro-level shaping sectoral and macroeconomic outcomes. Key decisions include:
+
+(i) production, prices, and profits: Firms base production decisions on expected sales for the production period, extrapolated from averages of past periods. Prices follow an oligopoly structure with elements of price competition and product differentiation, employing a modified Kalecki price model (1954, ch. 1). Actual prices reflect a weighted average of expected markups and market averages, adjusted by competitive performance feedback.
+
+(ii) investment: Firms decide on new capacity investments using extrapolated sales expectations from prior periods, constrained by debt following Kalecki's principle of increasing risk (1954, ch. 8). Financial factors, including debt/equity ratio and liquidity demand, influence these decisions.
+
+(iii) technological search: Firms combine stochastic innovative and imitative search processes (Nelson and Winter, 1982) with learning mechanisms inspired by the vintage model of Silverberg et al. (1988). Decisions on equipment replacement incorporate a payback period criterion, enhancing technological evolution.
+
+
+TIMELINE OF EVENTS:
+
+1. Income Realization (Individuals)
+Individuals receive their incomes from the previous period: wages from firms (or government), distributed profits if they hold shares, and any other transfers (e.g., social benefits).
+
+2. Individual Decisions
+Consumption and Saving: Each individual decides how much to consume and how much to save, typically based on their disposable income, wealth, and expectations.
+Labor Supply: Individuals decide whether (and how much) to supply labor to firms, subject to firm demand for labor.
+
+3. Planned Production (Firms)
+First Firm Decision: Firms in each sector plan production based on expected sales.
+Consumption & Intermediate Goods: Expected sales derive from the aggregate individual consumption demand for the consumption sector, plus firm demand for intermediates.
+Capital Goods: Production depends on the effective orders from other firms’ investment needs (and exports).
+
+4. Effective Production (Firms)
+
+Firms produce according to their planned production, but actual output is constrained by:
+	- Capacity (installed capital)
+	- Availability of intermediate inputs
+	- Labor hired
+Production typically follows a Leontief technology combining labor, capital, and inputs.
+
+5. Price Decision (Firms)
+Second Firm Decision: Firms set prices as a weighted average of (i) their desired price (markup over variable costs) and (ii) the average market price in the sector.
+Firms may adjust desired markups based on competitiveness or profitability targets.
+
+6. External Sector
+Exports for each sector are determined by an exogenous or semi-endogenous rule (e.g., a fixed coefficient times foreign income, plus price competitiveness).
+
+7. Total Sectoral Orders
+(i) Consumption Goods: Summed individual consumption demand (from Step 2) plus export demand.
+(ii) Capital Goods: Demand driven by firms’ investment orders (see Step 10) plus exports.
+(iii) Intermediate Goods: Third Firm Decision in user sectors—firms place orders for next period’s production requirements.
+
+8. Firm’s Orders & Market Share
+A firm’s effective orders depend on the total sectoral demand (from Step 7) and on its market share, which evolves according to a replicator dynamic or similar mechanism (affected by competitiveness, price, quality, and delivery times).
+
+9. Sales
+Actual sales result from fulfilling the orders received (Step 8).
+If the firm cannot meet demand (due to capacity, input constraints, or labor supply limitations), unmet orders become backlogs or delivery delays, negatively impacting future competitiveness.
+
+10. Income Creation
+(i) Functional Distribution:
+	- Total Wages: Sum of wages paid by all firms and government to individuals (including R&D wages, if relevant).
+	- Total Profits: Sector-level revenues minus variable costs (wages, inputs, indirect taxes, and R&D expenses). A portion of these profits may be distributed to individual shareholders.
+(ii) Personal (Individual) Distribution:
+	- Each individual receives wage income (if employed) plus any distributed profits or interest.
+	- Formation of Income Classes: Individuals are grouped into classes based on their resulting income (e.g., low-income, middle-income, high-income). These classes are then used for reporting, policy, or other aggregated dynamics.
+
+11.Investment Decision (Firms)
+Fourth Firm Decision: At the end of the investment cycle, each firm decides if and how much to invest, subject to financial constraints.
+(i) Capacity Expansion: Based on expected future sales and desired capacity utilization.
+(ii) Replacement: To offset physical depreciation.
+(iii) Obsolescence: Replacement or expansion triggered by new technologies and payback criteria.
+
+12. R&D (Firms)
+Firms allocate resources to innovation and diffusion (imitative) activities, following approaches like Nelson & Winter (1982).
+Technological progress affects future productivity and cost structures.
+
+13. Entry and Exit (Firms)
+Firms may exit if they have persistently low market share or high debt (financial distress).
+New firms may enter only if there is an “open slot” due to exit, or if specific entry conditions are met (e.g., policy promoting new entrants).
+
+***************************************************************************************************************************************************************
+
+HOW TO READ THE CODE:
+
+--All objects use full capital letters
+--All variables begin with capital letters
+--All parameters begin with small letters (in this version most of them located at MACRO object).
+--Most COUNTRY variable names begin with "Country_"
+--Most SECTOR variable names begin with "Sector_"
+--Most FIRM variable names begin with "Firm_"
+--Most CLASS variable names begin with "Class_"
+--Most AGENT variable names begin with "Agent_"
+--Most GOVERNMENT variable names begin with "Government_"
+--Most FINANCIAL SECTOR variable names begin with "Financial_Sector_"
+--Most BANK variable names begin with "Bank_"
+
+--Variables are grouped in additional files. 
+--Most of the variables, except the trivial ones, have line-by-line description
+
+--Frequency Parameters: 
+There is a set of parameters that define the frequency of certain decisions or how many periods an agent takes in consideration into its decisions.
+All the code is generalized for changes in those parameters.
+	"annual_frequency"
+	"sector_investment_frequency"
+	"sector_price_frequency"
+
+--Control Parameters:
+There is a set of parameters that changes some aspects of the model or defines when something begin. 
+These parameters usually begin their names with "begin_" or "switch_" and most of them are located at COUNTRY object.
+
+--Support Functions
+There are some support functions used troughout the code. They are defined in the file "fun_support.h".
+	"ROUND"
+	"LAG_SUM"
+	"LAG_AVE"
+	"LAG_GROWTH"
+
+--Global Pointers
+There are some global pointers used to identify specific objects. They are defined in the main file and initialized in the initialization variable.
+	"consumption"
+	"capital"
+	"input"
+	"government"
+	"financial"
+	"external"
+	"country"
+	"centralbank"
+	"aclass"
+	"bclass"
+	"cclass"
+
+*************************************************************************************************
+
+MODEL CALIBRATION AND INITIALIZATION
+
+This version includes an automatic initialization and calibration procedures. Users do not need to define all parameters and lagged values manually since most of them are calculated and writen by the model itself at the first time period based only on a subset of parameters and some hypothesis (homogeneity among firms and stock-flow consistency norms).
+Most of the parameters that contains the word "initial" on their names are used only for this procedure.
+Additionally, multiple instances of objects are created in this proceadure. The initial number of objects are parameters controlled by the user.
+
+Hypothesis:
+1. Firms: All firms start homogeneously within each sector. Heterogeneity among firms will develop dynamically during the simulation.
+2. Agents: All agents (households) start with an initial income, savings, and labor supply distribution based on user-defined or empirical data. Heterogeneity is introduced during simulation via income realization and individual decisions.
+3. Economy: The economy begins in a non-growth steady-state position, with growth and cycles generated endogenously during the simulation.
+4. Stock-Flow Consistency: All initial stock-flow ratios are constant, ensuring coherence between stocks (e.g., capital, savings) and flows (e.g., income, production).
+5. Investment: There is no initial expansion or replacement investment; initial investments only offset physical depreciation of capital goods.
+
+To better understand that procedure, see variable "init_2".
+
+Essential calibration parameters: these parameters must be defined by the user.
+-"country_initial_depreciation_share_GDP"							:defines the initial share of private investment on GDP, and initial GDP, given the initial private investment
+-"country_initial_exports_share_GDP"								:defines the initial share of exports on GDP, and initial exports, given GDP
+-"country_initial_government_share_GDP"								:defines the initial share of government expenses on GDP, and initial total government expenses, given GDP
+-"cb_annual_real_interest_rate"										:defines the initial nominal interest rate, given the target inflation
+-"cb_target_annual_inflation"										:defines the initial nominal interest rate, given the real interest rate
+-"government_initial_debt_gdp_ratio"								:defines the initial public debt to GDP ratio, and the initial stock of public debt given GDP
+-"government_initial_share_capital"									:defines the initial share of government investment on total government expenses, and real government capital demand given total expenses
+-"government_initial_share_consumption"								:defines the initial share of government consumption on total government expenses, and real government consumption demand given total expenses
+-"government_initial_share_input"									:defines the initial share of government inputs on total government expenses, and real government input demand given total expenses
+-"external_interest_rate"											:defines the external interest rate, and the initial capital flows given the nominal interest rate
+-"initial_exchange_rate"											:defines the initial exchange rate
+-"initial_reserves_ratio"											:defines the initial international reserves to GDP ratio, and initial stock of international reserves given GDP
+-"initial_external_income_scale"									:defines the scale of external income to domestic income, and defines the initial external income given initial GDP
+-"sector_number_object_firms"										:defines the initial number of firms in each sector, 
+-"sector_initial_depreciation_scale"								:defines the number of initial capital goods that will physically depreciate at each time period for each firm
+-"sector_investment_frequency"										:defines the investment frequency of the sector and the share of firms that will invest at each time period
+-"sector_initial_debt_rate"											:defines the initial debt rate of each sector, and the initial stock of loans of each sector given the initial capital of each sector
+-"sector_initial_liquidity_preference"								:defines the initial desired deposits to capital, and the initial stock of deposits of each sector given the initial capital
+-"sector_initial_exports_share"										:defines the share of total exports for each sector, and the external real demand of each sector given the initial total exports
+-"sector_initial_price"												:defines the initial price of each sector
+-"sector_initial_external_price"									:defines the initial external price of each sector
+-"sector_initial_productivity"										:defines the initial productivity of each sector
+-"sector_initial_profit_rate"										:defines the initial profit rate of each sector
+-"sector_indirect_tax_rate"											:defines the initial indirect tax rate of each sector
+-"sector_rnd_revenue_proportion"									:defines the share of revenue that will be allocated to R&d expenses for each sector
+-"sector_input_tech_coefficient"									:defines the technical coefficient of inputs of each sector
+-"sector_capital_output_ratio"										:defines the capital-output-ratio of each sector
+-"sector_desired_degree_capacity_utilization"						:defines the desitred degree of capacity utilization of each sector
+
+*******************************************************************************************************
+
+MODEL CONTROL PARAMETERS
+
+"begin_credit_rationing"											:defines when overall credit rationing of the banking sector begins. -1 = no credit rationing
+"begin_expenses_ceiling_rule"										:defines when the expenses ceiling fiscal rule begins. -1 = no expenses ceiling
+"begin_flexible_exchange_rate"										:defines when flexible exchange rate begins. -1 = fixed exchange rate
+"begin_flexible_surplus_target"										:defines when flexible surplus target fiscal rule begins. -1 = fixed suplus target
+"begin_monetary_policy"												:defines when reactive monetary policy begins. -1 = fixed basic interest rate
+"begin_surplus_target_rule"											:defines when surplus target fiscal rule begins. -1 = no surplus target
+
+"switch_class_tax_structure"										:defines different sources of direct taxation
+	0= No Income Taxation
+	1= Taxation on Wages Only
+	2= Taxation on Profits Only
+	3= Taxation on Wages and Profits
+	4= Taxation on Wages, Profits and Interest Gains
+	5= Taxation on Wages, Profits, Interest and Stock of Wealth
+	
+"switch_creditworthiness"											:defines how banks define the creditworthness rank	
+	1= Debt Rate
+	2= Date Birth, old to new
+	3= Date Birth, new to old
+									
+"switch_entry"														:defines if new firms can enter or not
+	0= No entry
+	1= Entry
+	
+"switch_extra_gov_expenses"											:defines if excess fiscal space is spent in government investment or not
+	0= No Extra Investment
+	1= Extra Investment
+	
+"switch_extra_imports"												:defines if demand not met by domestic production is supplied by the external sector as imports
+	0= No Extra Imports
+	1= Extra Imports
+	
+"switch_interest_investment"										:defines how interest rate affect firms replacement investment decisions
+	0= No effect
+	1= Firms use Basic Interest Rate 
+	2= Firm use own specific Interest Rate
+	
+"switch_interest_payment"											:defines if interest on loans are fixed or flexible
+	0= Fixed Interest Rate
+	1= Flexible Interest Rate
+	 
+"switch_monetary_policy"											:defines the monetary policy rule
+	0= Fixed Real Interest Rate, Nominal Rate is variable though
+	1= Taylor Rule, with several possible targets
+	2= Smithin Rule
+	3= Pasinetti Rule
+	4= Kansas City Rule
+
+*******************************************************************************************************
+
+OTHER RELEVANT PARAMETERS
+
+->Monetary Policy
+	"cb_target_annual_inflation"									:defines the inflation target for the Taylor Rule
+	"cb_target_capacity"											:defines the capacity utilizaton target for the Taylor Rule
+	"cb_target_credit_growth"										:defines the credit growth target for the Taylor Rule
+	"cb_target_debt_rate"											:defines the debt rate target for the Taylor Rule
+	"cb_sensitivity_inflation"										:defines the CB response to inflation gaps
+	"cb_sensitivity_capacity"										:defines the CB response to capacity utilization gaps
+	"cb_sensitivity_credit_growth"									:defines the CB response to credit growth gaps
+	"cb_sensitivity_debt_rate"										:defines the CB response to debt rate gaps
+	"cb_interest_rate_adjustment"									:smoothing parameters, defines maximum absolute effective change in basic interest rate
+	
+->Fiscal Policy
+	"government_benefit_rate"										:defines the percentage of average wage to be paid as unemployment benefits
+	"government_real_growth"										:defines the desired real growth of government expenses
+	"government_max_surplus_target"									:defines the maximum suplus target rate in case of flexible surplus target
+	"government_min_surplus_target"									:defines the minimum suplus target rate in case of flexible surplus target
+	"government_surplus_target_adjustment"							:defines the additive absolute adjustment to surplus target in case of flexible surplus target
+	"government_max_debt_ratio"										:defines the maximum accepted govenrment debt to GDP ratio
+	"government_min_debt_ratio"										:defines the minimum accepted government debt to GDP ratio
+	
+->Exchange Rate
+	"exchange_rate_adjustment"										:defines the addtive absolute change to exchange rate
+	"exchange_rate_max"												:defines the maximum exchange rate
+	"exchange_rate_min"												:defines the minimum exchnage rate
+	"external_capital_flow_adjustment"								:defines the share of capital flows to GDP
+	
+->Credit Rationing
+	"cb_minimum_capital_ratio"										:defines the capital adequacy ratio, regulatory rule
+	"fs_sensitivity_default"										:defines banks sensitivity to own default rate
+	"fs_sensitivity_debt_rate"										:defines banks sensitivity to overall debt rate
+	
+->Interest Rate Structure
+	"fs_spread_deposits"											:defines the negative spread applied over basic interest rate to determine deposits interest rate
+	"fs_spread_short_term"											:defines the positive spread applied over basic interest rate to determine short-term loans interest rate
+	"fs_spread_long_term"											:defines the positive spread applied over basic interest rate to determine long-term loans interest rate
+	"fs_risk_premium_class"											:defines the percentage of classes debt rate to be applied as risk premium to specific interest rates
+	"fs_risk_premium_short_term"									:defines the percentage of firms debt rate to be applied as risk premium to specific short-term interest rates
+	"fs_risk_premium_long_term"										:defines the percentage of firms debt rate to be applied as risk premium to specific long-term interest rates
+	
+->External Variables
+	"external_income_growth"										:defines an exogenous real growth rate for external real income
+	"external_income_adjustmnent"									:defines how domestic income growth can affect external real income growth
+	"external_income_sd"											:defines an exogenous standard deviation for real external income growth 
+	"sector_external_price_growth"									:defines an exogenous growth rate for sectoral external prices
+	"sector_external_price_competitiveness"							:defines how domestic prices can affect external prices growth
+	"sector_external_price_sd"										:defines an exogenous standard deviation for sectoral exernal prices growth
+	
+->Shocks
+	"external_shock_begin"											:defines when the shock on real external income will happen
+	"external_shock_duration"										:defines how many time period the real external income shock will last
+	"external_shock_size"											:defines the size of the real external income shock, in realtion to the expected growth rate
+	"sector_external_price_shock_begin"								:defines when the shock on sectoral external prices will happen
+	"sector_external_price_shock_duration"							:defines how many time periods the sectoral external price shock will last
+	"sector_external_price_shock_size"								:defines the size of the sectoral external price shock, in relation to the expected growth rate
+	
+
+*******************************************************************************************************
+
+SAMPLE CONFIGURATIONS:
+
+Sim_1
+--Single Mandate Taylor Rule
+--Flexible Surplus Target with Debt Rate Limits
+--Flexible Exchange Rate
+--Credit Rationing
+
+Sim_2
+--Single Mandate Taylor Rule
+--Flexible Surplus Target with Debt Rate Limits
+--Flexible Exchange Rate
+--No Credit Rationing
+
+Sim_3
+--Single Mandate Taylor Rule
+--Flexible Surplus Target with Debt Rate Limits
+--Fixed Exchange Rate
+--No Credit Rationing
+
+Sim_4
+--Fixed Interest Rates
+--Flexible Surplus Target with Debt Rate Limits
+--Fixed Exchange Rate
+--No Credit Rationing
+
+Sim_5
+--Fixed Interest Rates
+--Unconstrained Fiscal Policy
+--Simples Government (Only Wages)
+--Fixed Exchange Rate
+--No Credit Rationing
+
+
+
