@@ -660,31 +660,10 @@ RESULT(v[6])
 
 
 
-EQUATION("Household_Income")
-
-v[0] = V("Household_Wage_Income");
-v[1] = V("Household_Profit_Income");
-
-v[2] = v[0] + v[1];
-
-RESULT(v[2])
-
-
-
-EQUATION("Household_Total_Income")
-
-v[0] = V("Household_Wage_Income");
-v[1] = V("Household_Profit_Income");
-v[2] = V("Household_Deposits_Return");
-
-v[3] = v[0] + v[1] + v[2];
-
-RESULT(v[3])
-
-
 EQUATION("Household_Nominal_Disposable_Income")
 /*
-Household net nominal income is calculated using a bottom-up approach, summing individual wage and profit incomes, interest received on deposits, and unemployment benefits. Taxation is applied based on the chosen tax structure.
+Household net nominal income is calculated using a bottom-up approach, summing individual wage and profit incomes, interest received on deposits, and unemployment benefits.
+Taxation is applied based on the chosen tax structure.
 
 switch_household_tax_structure:
 0 --> No Tax

@@ -125,7 +125,7 @@ where U ~ Uniform(0,1)
 - For 0 < q < 1: support is 0 ≤ x < 1/((1-q)*lambda) (finite)
 If parameters are out of support, prints a warning to stderr and returns NAN.
 Parameters:
-    q      : entropic index parameter (0 < q < 2)
+    q  : entropic index parameter (0 < q < 2)
     lambda : rate parameter (lambda > 0)
 Returns:
     A random sample x, or NAN if out of support.
