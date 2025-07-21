@@ -163,9 +163,7 @@ There are some global pointers used to identify specific objects. They are defin
 	"external"
 	"country"
 	"centralbank"
-	"aclass"
-	"bclass"
-	"cclass"
+	"household"
 
 *************************************************************************************************
 
