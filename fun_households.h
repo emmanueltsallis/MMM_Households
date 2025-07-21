@@ -10,7 +10,7 @@ RESULT(LAG_AVE(p, "Household_Nominal_Disposable_Income", V("annual_frequency"),1
 EQUATION("Household_Real_Autonomous_Consumption")
 /*
 Household autonomous consumption depends on the average quality growth of the consumption goods sector.
-Heterogeneity is introduced by applying a simple random variation to the adjustment parameter.
+Heterogeneity is introduced through persistent household-specific adjustment parameters assigned at initialization.
 */
 
 v[0]=CURRENT;                  // Household autonomous consumption in the last period
@@ -20,8 +20,8 @@ if (v[2]==0)                    // If it is an adjustment period
     {
         v[3]=LAG_GROWTH(consumption, "Sector_Avg_Quality", v[1], 1);
         
-        // Heterogeneous adjustment parameter
-        v[4] = max(0, min(1, V("household_autonomous_consumption_adjustment") * (1 + (RND - 0.5))));
+        // Use persistent household-specific adjustment parameter
+        v[4] = V("household_autonomous_consumption_adjustment");
 
         // Apply adjustment to the change in autonomous consumption
         v[5]=v[0] * (1 + v[4] * v[3]);

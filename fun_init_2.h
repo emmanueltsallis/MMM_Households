@@ -35,9 +35,9 @@ v[250]=V("profit_participation_rate"); // Fraction of households receiving profi
 v[26]=V("household_direct_tax"); // Base tax rate for households
 v[27]=V("household_initial_propensity_import"); // Base import propensity
 v[28]=V("household_import_elasticity_price");   // Price elasticity of imports
-// Set household_skill_mean = -0.5 * (household_skill_stddev)^2 to ensure E[household_skill] = 1
-v[29]=V("household_skill_mean");   // Mean parameter for household skill log-normal distribution
+v[29]=V("household_skill_mean");   // Mean parameter for household skill log-normal distribution // Set household_skill_mean = -0.5 * (household_skill_stddev)^2 to ensure E[household_skill] = 1
 v[30]=V("household_skill_stddev"); // Standard deviation parameter for household skill log-normal distribution
+v[31]=V("household_avg_autonomous_consumption_adjustment"); // Global baseline for autonomous consumption adjustment
 v[19]=V("avg_propensity_to_spend"); // Average propensity to spend for approximation
 
 
@@ -188,6 +188,7 @@ CYCLE(cur, "HOUSEHOLDS")
     v[163] = v[26];  // Flat tax rate for all households
     v[164] = max(0, min(1, v[27] * norm(1.0, 0.20)));  // Household-specific import propensity (normal distribution, σ=0.20)
     v[165] = max(0.1, min(2.0, v[28] * norm(1.0, 0.25)));  // Household-specific price elasticity (normal distribution, σ=0.25, realistic bounds)
+    v[166] = max(0, min(1, v[31] * norm(1.0, 0.20)));  // Household-specific autonomous consumption adjustment (normal distribution, σ=0.20)
 
     // Generate initial income based on distributions defined earlier
     // Parameters read earlier: v[21]=wage_mean, v[22]=wage_stddev
@@ -195,32 +196,32 @@ CYCLE(cur, "HOUSEHOLDS")
     v[162] = 0;  // Initial profit income set to 0 (will be calculated during simulation using profit shares)
 
     // Calculate initial disposable income for this household
-    v[166] = (v[161] + v[162]) * (1 - v[163]); // Income * (1 - household tax rate)
+    v[167] = (v[161] + v[162]) * (1 - v[163]); // Income * (1 - household tax rate)
     
     // Calculate propensity to spend using single-pass algorithm
-    v[167] = v[161] + v[162]; // Total gross income
-    v[171] = v[167] / v[170];  // Relative income (1.0 = theoretical median household)
+    v[168] = v[161] + v[162]; // Total gross income
+    v[172] = v[168] / v[170];  // Relative income (1.0 = theoretical median household)
     
     // Income-inverse propensity relationship with proper bounds
-    // Poor households (v[171] < 1) get higher propensity, rich households (v[171] > 1) get lower
-    v[172] = 0.05 + 1.15 / (1 + v[171] * v[171]);  // Base propensity: ranges from ~1.2 (poor) to ~0.05 (rich)
+    // Poor households (v[172] < 1) get higher propensity, rich households (v[172] > 1) get lower
+    v[173] = 0.05 + 1.15 / (1 + v[172] * v[172]);  // Base propensity: ranges from ~1.2 (poor) to ~0.05 (rich)
     
     // Add individual heterogeneity around income-based baseline
-    v[173] = v[172] * norm(1.0, 0.15);  // ±15% individual variation around income-based baseline
+    v[174] = v[173] * norm(1.0, 0.15);  // ±15% individual variation around income-based baseline
     
     // Apply final bounds: minimum 0.05, maximum 1.3 (allows rare cases >1)
-    v[174] = max(0.05, min(1.3, v[173]));
+    v[175] = max(0.05, min(1.3, v[174]));
 
     // Initialize household lagged variables and stocks
     // Use v[101] = consumption sector price, v[20] = number of households, v[6]=total autonomous consumption scale
     // Use v[155]=initial max debt rate, v[156]=initial liquidity preference
 	for (i=1; i<=V("annual_frequency"); i++)		// Loop for each period in a year
 		{
-		WRITELLS(cur, "Household_Nominal_Disposable_Income", v[166], 0, i);    		// Set initial nominal income for each lag
-		WRITELLS(cur, "Household_Real_Disposable_Income", (v[166]/v[101]), 0, i);   // Set initial real income for each lag
+		WRITELLS(cur, "Household_Nominal_Disposable_Income", v[167], 0, i);    		// Set initial nominal income for each lag
+		WRITELLS(cur, "Household_Real_Disposable_Income", (v[167]/v[101]), 0, i);   // Set initial real income for each lag
 		}
-    WRITELLS(cur, "Household_Avg_Nominal_Income", v[166], 0, 1);
-    WRITELLS(cur, "Household_Avg_Real_Income", (v[166]/v[101]), 0, 1);
+    WRITELLS(cur, "Household_Avg_Nominal_Income", v[167], 0, 1);
+    WRITELLS(cur, "Household_Avg_Real_Income", (v[167]/v[101]), 0, 1);
     WRITELLS(cur, "Household_Real_Autonomous_Consumption", v[6]/v[20], 0, 1); // Distribute total autonomous consumption evenly
     WRITELLS(cur, "Household_Liquidity_Preference", v[156], 0, 1); // Use global initial value
     WRITELLS(cur, "Household_Max_Debt_Rate", v[155], 0, 1);      // Use global initial value
@@ -232,7 +233,8 @@ CYCLE(cur, "HOUSEHOLDS")
     WRITES(cur, "household_direct_tax", v[163]);
     WRITES(cur, "household_import_propensity", v[164]);
     WRITES(cur, "household_import_elasticity", v[165]);
-    WRITES(cur, "household_propensity_baseline", v[174]); // Store calculated propensity baseline
+    WRITES(cur, "household_autonomous_consumption_adjustment", v[166]); // Store persistent autonomous consumption adjustment
+    WRITES(cur, "household_propensity_baseline", v[175]); // Store calculated propensity baseline
 
     // Assign persistent skill to each household (log-normal distribution)
     v[100] = lnorm(v[29], v[30]);  // Set household_skill_mean = -0.5 * (household_skill_stddev)^2 to ensure E[household_skill] = 1
@@ -240,15 +242,15 @@ CYCLE(cur, "HOUSEHOLDS")
     
     // Initialize profit share coefficient using q-exponential distribution
     // Only a fraction of households participate in profit distribution
-    v[175] = RND;  // Random draw for participation
-    if (v[175] < v[250])  // v[250] = profit_participation_rate (e.g., 0.05 for 5%)
+    v[176] = RND;  // Random draw for participation
+    if (v[176] < v[250])  // v[250] = profit_participation_rate (e.g., 0.05 for 5%)
     {
         // This household participates in profits - use q-exponential distribution
         // Note: v[25] = profit_q (shape parameter), v[23] = profit_lambda (scale parameter)
 		// FOR LATER: Add a simple equation that occasionally adjusts them (e.g., every few years)
 		// Use a switch parameter to enable/disable dynamic adjustments
-        v[176] = qexponential(v[25], v[23]);  // Generate q-exponential distributed profit share
-        WRITES(cur, "household_profit_share", v[176]);
+        v[177] = qexponential(v[25], v[23]);  // Generate q-exponential distributed profit share
+        WRITES(cur, "household_profit_share", v[177]);
     }
     else
     {
