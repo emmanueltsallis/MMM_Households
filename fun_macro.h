@@ -13,8 +13,8 @@ Distributed effective loans to firms if there is credit rationing
 This variable is very important
 It is located in the macro level
 There are some underlying hypothesis:
-1-Income classes are never credit rationed and receive loans first.
-2-A bank has a total amount of loans it can provide. After discounting the amount for the income classes, it distribute proportionally to each sector
+1-Households are never credit rationed and receive loans first.
+2-A bank has a total amount of loans it can provide. After discounting the amount for the households, it distribute proportionally to each sector
 3-Within each sector, it provides in a order of debt rate. High indebtedness firms migh not receive loans.
 */
 
@@ -168,7 +168,7 @@ RESULT(LAG_GROWTH(p, "Country_Consumer_Price_Index", V("annual_frequency"), 1))
 
 EQUATION("Country_Distributed_Profits")
 /*
-Total amount of distributed profits by the firms. Will be used to determine the income of the income classes.
+Total amount of distributed profits by the firms. Will be used to determine the (profit) income of the households.
 */
 	v[0]=0;                                            		//initializes the CYCLE
 	CYCLE(cur, "SECTORS")                              		//CYCLE trought all sectors
@@ -697,6 +697,14 @@ EQUATION("Country_Gini_Wealth") // Gini based on Household Deposits (Approx usin
         RESULT(v[41])
     }
 
+EQUATION("Country_Median_Household_Income")
+// Calculates the median household income once per time step to be used by all households.
+RESULT(MEDS("Household_Avg_Nominal_Income"))
+	
+EQUATION("Country_Unemployed_Count")
+// Calculates the total number of unemployed households once per time step.
+RESULT(COUNT_CNDS("HOUSEHOLD", "Household_Employment_Status", "==", 0))
+
 /*******************************************************************************
  Global Household Financial Aggregates (for Bank Calculations)
 *******************************************************************************/
@@ -729,6 +737,8 @@ RESULT(SUM("Household_Interest_Payment"))
 EQUATION("Country_Total_Household_Debt_Payment")
 /* Sum of loan principal repayments made by all households */
 RESULT(SUM("Household_Debt_Payment"))
+
+
 
 
 

@@ -13,58 +13,97 @@ Household autonomous consumption depends on the average quality growth of the co
 Heterogeneity is introduced through persistent household-specific adjustment parameters assigned at initialization.
 */
 
-v[0]=CURRENT;                  // Household autonomous consumption in the last period
-v[1]=V("annual_frequency");     // Defines the household adjustment period
-v[2]=fmod((double) t, v[1]);    // Determines if it is the household adjustment period
-if (v[2]==0)                    // If it is an adjustment period
-    {
-        v[3]=LAG_GROWTH(consumption, "Sector_Avg_Quality", v[1], 1);
-        
-        // Use persistent household-specific adjustment parameter
-        v[4] = V("household_autonomous_consumption_adjustment");
+    v[0]=CURRENT;                  // Household autonomous consumption in the last period
+    v[1]=V("annual_frequency");     // Defines the household adjustment period
+    v[2]=fmod((double) t, v[1]);    // Determines if it is the household adjustment period
+    if (v[2]==0)                    // If it is an adjustment period
+        {
+            v[3]=LAG_GROWTH(consumption, "Sector_Avg_Quality", v[1], 1);
+            
+            // Use persistent household-specific adjustment parameter
+            v[4] = V("household_autonomous_consumption_adjustment");
 
-        // Apply adjustment to the change in autonomous consumption
-        v[5]=v[0] * (1 + v[4] * v[3]);
+            // Apply adjustment to the change in autonomous consumption
+            v[5]=v[0] * (1 + v[4] * v[3]);
 
-        // Ensuring non-negative consumption
-        v[6]=max(0, v[5]);
-    }
-else
-    v[6]=v[0]; // If not adjustment period, retain previous period's value
+            // Ensuring non-negative consumption
+            v[6]=max(0, v[5]);
+        }
+    else
+        v[6]=v[0]; // If not adjustment period, retain previous period's value
 
 RESULT(v[6])
 
 
 
-EQUATION("Household_Imports_Share")
+EQUATION("Household_Imports_Share") // "Keeping up with the Joneses" effect / Relative Income Theory (Duesenberry, 1949)
 /*
-Household import share includes heterogeneity, reflecting differences in consumer preferences.
-The household propensity to import and price elasticity both vary randomly by ?50% around their baseline values. Both are capped to ensure valid economic ranges.
+Calculates the import share where propensity to import is a fixed,
+innate household characteristic, while price elasticity to import is a
+dynamic hyperbolic function of the household's income relative to the mean.
 */
-    v[1] = max(0, min(1, V("household_initial_propensity_import") * (1 + (RND - 0.5))));  // Propensity to import
-    v[3] = VS(consumption, "Sector_Avg_Price");      // Consumption sector average price
-    v[4] = VS(consumption, "Sector_External_Price"); // Consumption sector external price
-    v[5] = VS(external, "Country_Exchange_Rate");    // Exchange rate
-    v[6] = max(0, min(5, V("household_import_elasticity_price") * (1 + (RND - 0.5)))); // Import price elasticity
 
-    v[7] = v[1] * pow((v[3] / (v[4] * v[5])), v[6]);  // Adjusted import share
-    v[8] = max(0, min(v[7], 1));  // Ensuring a valid proportion
+    // 1. Get the household's fixed, innate propensity to import
+    // This is initialized once for each household and remains constant.
+    v[0] = V("household_import_propensity");
 
+    // 2. Define parameters for the dynamic elasticity function
+    v[1] = V("household_elasticity_base_factor"); // Parameter: scales the hyperbola (calibrated to 1.0)
+
+    // 3. Get the necessary income values to calculate relative income
+    v[3] = V("Household_Avg_Nominal_Income");             // This household's income
+    v[4] = VS(country, "Country_Median_Household_Income"); // Use the pre-calculated economy-wide median
+
+    // 4. Calculate the dynamic elasticity using the hyperbolic function
+    //    elasticity = base_factor / relative_income
+    v[5] = (v[4] > 0 && v[3] > 0) ? (v[1] / (v[3] / v[4])) : 5.0; // If income is zero, elasticity is set to the max cap value directly.
+    v[6] = max(0.001, min(5.0, v[5])); // The dynamic elasticity, bounded for safety
+
+    // 5. Get Market Prices
+    v[7] = VS(consumption, "Sector_Avg_Price");
+    v[8] = VS(consumption, "Sector_External_Price");
+    v[9] = VS(external, "Country_Exchange_Rate");
+    v[10] = (v[9] * v[8] > 0) ? (v[7] / (v[9] * v[8])) : 1.0; // Price Ratio
+
+    // 6. Calculate the Final Import Share
+    // Import Share = (Propensity to Import) * (Price Ratio) ^ (Price Elasticity to Import)
+    v[11] = v[0] * pow(v[10], v[6]);
+
+    // 7. Final bounds check
+    v[12] = max(0, min(1, v[11]));
+
+RESULT(v[12])
+
+
+
+EQUATION("Household_Propensity_to_Spend") // "Keeping up with the Joneses" effect / Relative Income Theory (Duesenberry, 1949)
+/*
+Dynamic propensity to spend based on household income relative to median income.
+Uses a sigmoid function: y = (1-n)(1/(1+exp(k*(x-x0)))) + n
+where:
+- x = household_income / median_income (relative income ratio)
+- k = household_propensity_steepness (controls how quickly propensity changes with income)
+- x0 = household_propensity_center (income level where propensity = 0.5)
+- n = household_propensity_min (minimum propensity, creates range from n to 1)
+
+The function creates a "Keeping up with the Joneses" effect portraying an unequal economy:
+households compare their consumption to the median household. (Duesenberry, 1949)
+
+*/
+    v[0] = V("Household_Avg_Nominal_Income");  // Household's average nominal income
+    v[1] = VS(country, "Country_Median_Household_Income");  // Use the pre-calculated economy-wide median
+    v[2] = (v[1] > 0) ? v[0] / v[1] : 1.0;  // Relative income ratio (x = household_income / median_income)
+
+    // Flexible sigmoid function parameters
+    v[3] = V("household_propensity_steepness");  // Steepness parameter (k): controls how quickly propensity changes (calibrated to 2.0)
+    v[4] = V("household_propensity_center");     // Center point (x0): income level where propensity = 0.5 (calibrated to 2.0)
+    v[5] = V("household_propensity_min");        // Minimum bound (n): calibrated to 0.05
+
+    // Truncated Sigmoid function: y = (1 - n) * (1 / (1 + exp(k * (x - x0)))) + n
+    v[6] = 1 / (1 + exp(v[3] * (v[2] - v[4])));  // Base sigmoid function: 1 / (1 + exp(k * (x-x0)))
+    v[7] = (1 - v[5]) * v[6] + v[5];  // Scale and shift: (1-n) * sigmoid + n
+    v[8] = min(1, v[7]);  // Cap maximum at 1
 RESULT(v[8])
-
-
-
-EQUATION("Household_Propensity_to_Spend") // “Keeping up with the Joneses” effect / Relative Income Theory (Duesenberry, 1949)
-/*
-Propensity to spend uses a fixed baseline established during initialization.
-The baseline is calculated based on the household's relative income position:
-- Poor households (below median income) have higher propensity
-- Rich households (above median income) have lower propensity  
-- Individual heterogeneity is built into the baseline during initialization
-This approach maintains economic realism while eliminating excessive stochastic volatility.
-*/
-v[0] = V("household_propensity_baseline");  // Use pre-computed baseline from initialization
-RESULT(v[0])
 
 
 
@@ -77,9 +116,16 @@ Household real domestic consumption incorporates heterogeneity in propensity to 
     v[2]=V("Household_Real_Autonomous_Consumption");
     v[4]=V("Household_Imports_Share");
     v[3]=v[0]*v[1]*(1-v[4])+v[2];
-    RESULT(v[3])
+RESULT(v[3])
 
-    EQUATION("Household_Real_Desired_Imported_Consumption")
+
+
+EQUATION("Household_Real_Desired_Imported_Consumption")
+/*
+Household real imported consumption depends on:
+1. Effective domestic consumption * domestic price
+2. Effective imported consumption * foreign price * exchange rate
+*/
     v[0]=V("Household_Avg_Real_Income");		// Household's past real disposable income
     v[1]=V("Household_Propensity_to_Spend");	// Household-specific spending propensity
     v[2]=V("Household_Imports_Share");
@@ -109,7 +155,8 @@ EQUATION("Household_Avg_Debt_Rate")
 /*
 Household avg debt rate of the last household period (equal to annual period)
 */
-RESULT(LAG_AVE(p, "Household_Debt_Rate", V("annual_frequency"),1))
+    v[0] = LAG_AVE(p, "Household_Debt_Rate", V("annual_frequency"),1);
+RESULT(v[0])
 
 
 
@@ -117,35 +164,38 @@ EQUATION("Household_Interest_Rate")
 /*
 Interest rates paid by households, including heterogeneous risk premiums.
 */
-v[0]=VS(financial,"fs_risk_premium_household"); 		// Household-specific risk premium
-v[1]=V("Household_Avg_Debt_Rate");						// Household-specific debt rate
-v[2]=VS(financial,"Financial_Sector_Avg_Interest_Rate_Short_Term"); // Baseline short-term loan rate
-v[3]=(1+v[1]*v[0])*v[2]; 								// Adjusted interest rate based on household debt risk
+    v[0]=VS(financial,"fs_risk_premium_household"); 		// Household-specific risk premium adjustment parameter
+    v[1]=V("Household_Avg_Debt_Rate");						// Household-specific debt rate
+    v[2]=VS(financial,"Financial_Sector_Avg_Interest_Rate_Short_Term"); // Baseline short-term loan rate
+    v[3]=(1+v[1]*v[0])*v[2]; 								// Adjusted interest rate based on household debt risk
 RESULT(v[3])
 
 
 
+/*
 EQUATION("Household_Avg_Interest_Rate")
 /*
 Computes the weighted average interest rate across all households, where the weight is the outstanding stock of loans.
 */
+/*
 
-v[0] = 0;  // Sum of weighted interest rates
-v[1] = 0;  // Sum of total household loans
+    v[0] = 0;  // Sum of weighted interest rates
+    v[1] = 0;  // Sum of total household loans
 
-CYCLE(cur, "HOUSEHOLDS")
-{
-    v[2] = VS(cur, "Household_Interest_Rate"); // Individual household interest rate
-    v[3] = VS(cur, "Household_Stock_Loans");  // Household loan stock
+    CYCLE(cur, "HOUSEHOLDS")
+    {
+        v[2] = VS(cur, "Household_Interest_Rate"); // Individual household interest rate
+        v[3] = VS(cur, "Household_Stock_Loans");  // Household loan stock
 
-    v[0] += v[2] * v[3];  // Sum of weighted interest rates
-    v[1] += v[3];         // Total loan stock
-}
+        v[0] += v[2] * v[3];  // Sum of weighted interest rates
+        v[1] += v[3];         // Total loan stock
+    }
 
-// Avoid division by zero
-v[4] = v[1] > 0 ? v[0] / v[1] : 0;
+    // Avoid division by zero
+    v[4] = v[1] > 0 ? v[0] / v[1] : 0;
 
 RESULT(v[4])
+*/
 
 
 
@@ -158,36 +208,26 @@ switch_interest_payment
 1-->flexible interest, the rate is calculated evert period
 */
 
-v[0] = 0;  // Initialize total interest payment accumulator
-v[4] = V("switch_interest_payment");  // Determines fixed or flexible interest structure
-v[6] = V("Household_Avg_Interest_Rate"); // Average interest rate of all households
+    v[0] = 0;  // Initialize total interest payment accumulator
+    v[4] = V("switch_interest_payment");  // Determines fixed or flexible interest structure
 
-CYCLE(cur, "HOUSEHOLD_LOANS")  // Loop through all household loans
-{
-	v[1] = VS(cur, "household_loan_total_amount"); // Outstanding loan amount
+    CYCLE(cur, "HOUSEHOLD_LOANS")  // Loop through all household loans
+    {
+        v[1] = VS(cur, "household_loan_total_amount"); // Outstanding loan amount
 
-	// If flexible interest rate
-	if(v[4] == 1)
-	{
-		v[2] = V("Household_Interest_Rate");  // Use household-specific interest rate
-	}
-	else  // If fixed interest rate
-	{
-		// If loan interest rate was not defined at loan origination, assign a rate
-		if (!EXIST("household_loan_interest_rate"))
-		{
-			v[2] = norm(v[6], 0.05);  // Assign random variation around 5% of Household_Avg_Interest_Rate
-			WRITES(cur, "household_loan_interest_rate", v[2]);
-		}
-		else
-		{
-			v[2] = VS(cur, "household_loan_interest_rate");  // Use pre-defined rate
-		}
-	}
+        // If flexible interest rate
+        if(v[4] == 1)
+        {
+            v[2] = V("Household_Interest_Rate");  // Use household-specific interest rate
+        }
+        else  // If fixed interest rate
+        {
+            v[2] = VS(cur, "household_loan_interest_rate");  // Use pre-defined rate
+        }
 
-	v[3] = v[1] * v[2];  // Compute interest payment
-	v[0] += v[3];  // Accumulate total interest payments
-}
+        v[3] = v[1] * v[2];  // Compute interest payment
+        v[0] += v[3];  // Accumulate total interest payments
+    }
 
 RESULT(max(0, v[0]))  // Ensure non-negative payments
 
@@ -230,10 +270,11 @@ RESULT(v[3])  // Output the total amount a household must pay
 
 
 
-EQUATION("Household_Liquidity_Preference")
+EQUATION("Household_Liquidity_Preference") // *
 /*
 Household's desired liquidity preference, determining the proportion of income kept in liquid deposits.
-Evolves based on household income growth and debt levels, with individual variation.
+Evolves based on household income growth and debt levels, with persistent individual heterogeneity.
+Each household maintains its own adjustment sensitivity established during initialization.
 */
 
 v[0]=V("annual_frequency");    // Frequency of adjustment
@@ -243,17 +284,17 @@ v[5]=VL("Household_Debt_Rate",1);  // Previous period's debt rate
 v[6]=V("Household_Max_Debt_Rate"); // Household's max acceptable debt rate
 v[7]=CURRENT;                      // Current liquidity preference
 
-// Random variation of household_liquidity_preference_adjustment by ?50% around the baseline
-v[8] = max(0, min(1, V("household_liquidity_preference_adjustment") * (1 + (RND - 0.5))));
+// Use persistent household-specific adjustment parameter established during initialization
+v[8] = V("household_liquidity_preference_adjustment");
 
 if(v[1]==1)  // Adjust liquidity preference at defined intervals
 {
-    if(v[4]<0 && v[5]>v[6])  // If income is falling and debt is high
-        v[9]=v[7]+v[8];      // Increase liquidity preference
-    else if(v[4]>0 && v[5]<v[6]) // If income is rising and debt is low
-        v[9]=v[7]-v[8];      // Decrease liquidity preference
+    if(v[4] < 0 && v[5] > v[6])  // If income is falling and debt is high
+        v[9] = v[7] + v[8];      // Increase liquidity preference
+    else if(v[4] > 0 && v[5] < v[6]) // If income is rising and debt is low
+        v[9] = v[7] - v[8];      // Decrease liquidity preference
     else
-        v[9]=v[7];           // No change
+        v[9] = v[7];            // No change
 }
 else
     v[9]=v[7]; // Maintain last period's liquidity preference
@@ -271,18 +312,18 @@ Household retained deposits at the current period.
 Based on household liquidity preference and long-term income trends.
 Ensures households do not go into debt to retain liquidity.
 */
-
-v[1] = V("Household_Financial_Obligations");  // Household's total financial obligations (interest + debt payments)
-v[2] = VL("Household_Stock_Deposits", 1);    // Stock of deposits from the last period
-v[8] = VL("Household_Avg_Nominal_Income", 1); // Use average nominal income instead of current disposable income
-
-v[3] = max(0, (v[2] + v[8] - v[1])); // Compute current internal funds available
-
-v[4] = V("Household_Avg_Nominal_Income"); // Use average nominal income for retained deposits calculation
-v[5] = V("Household_Liquidity_Preference"); // Household-specific liquidity preference, as a ratio of capital
-v[6] = v[4] * v[5]; // Desired amount of retained deposits (must be positive)
-
-v[7] = max(0, min(v[6], v[3])); // Ensures deposits are non-negative and do not exceed internal funds
+    // Household's total financial obligations (interest + debt payments)
+    v[1] = V("Household_Financial_Obligations");  // Household's total financial obligations (interest + debt payments)
+    v[2] = VL("Household_Stock_Deposits", 1);    // Stock of deposits from the last period
+    v[8] = VL("Household_Nominal_Disposable_Income", 1); // Use actual disposable income (for consistency with Household_Internal_Funds)
+    // Compute current internal funds available
+    v[3] = max(0, (v[2] + v[8] - v[1])); 
+    // Desired amount of retained deposits (must be positive)
+    v[4] = V("Household_Avg_Nominal_Income"); // Use average nominal income for desired retained deposits calculation
+    v[5] = V("Household_Liquidity_Preference"); // Household-specific liquidity preference, as a ratio of capital
+    v[6] = v[4] * v[5]; // Desired amount of retained deposits (must be positive)
+    // Ensure deposits are non-negative and do not exceed internal funds
+    v[7] = max(0, min(v[6], v[3])); // Ensures deposits are non-negative and do not exceed internal funds
 RESULT(v[7])
 
 
@@ -304,33 +345,36 @@ v[3] = v[4] + v[1] - v[0] - v[2];
 RESULT(v[3]) // Available funds must be used for expenses, investments, or additional savings
 
 
-EQUATION("Household_Max_Debt_Rate")
+EQUATION("Household_Max_Debt_Rate") // *
 /*
 Household desired debt rate.
 Inspired by Moreira (2010), evolves based on nominal income growth.
 Each household adjusts its debt rate based on income changes over time.
+Uses persistent household-specific adjustment parameters for heterogeneity.
 */
 
-v[0] = V("annual_frequency");  
-v[1] = fmod((double)t, v[0]);  // Determines if it's an adjustment period
-v[4] = LAG_GROWTH(p, "Household_Nominal_Disposable_Income", v[0], 1); // Growth rate of household disposable income
-v[5] = CURRENT;  // Previous period's debt rate
-v[6] = max(0, min(1, V("household_debt_rate_adjustment") * (1 + (RND - 0.5))));		// Introduce heterogeneity (?50% variation)
+    v[0] = V("annual_frequency");  
+    v[1] = fmod((double)t, v[0]);  // Determines if it's an adjustment period
+    v[4] = LAG_GROWTH(p, "Household_Nominal_Disposable_Income", v[0], 1); // Growth rate of household disposable income
+    v[5] = CURRENT;  // Previous period's debt rate
+    v[6] = V("household_debt_rate_adjustment"); // Household-specific debt rate adjustment parameter
 
-if (v[1] == 1) // If in the adjustment period
-{
-    if (v[4] > 0)  // If income is growing
-        v[7] = v[5] + v[6]; 
-    else if (v[4] < 0)  // If income is shrinking
-        v[7] = v[5] - v[6]; 
-    else  // No change in income
-        v[7] = v[5];
-}
-else
-    v[7] = v[5]; // Maintain previous debt rate if not in the adjustment period
+    if (v[1] == 1) // If in the adjustment period
+    {
+        if (v[4] > 0)  // If income is growing
+            v[7] = v[5] + v[6];  // Increase debt rate
+         // v[7] = v[5] + (v[6]) * (v[4])  // Adjusted debt rate (positive growth)
+        else if (v[4] < 0)  // If income is shrinking
+            v[7] = v[5] - v[6];  // Decrease debt rate
+         // v[7] = v[5] + (v[6]) * (v[4])  // Adjusted debt rate (negative growth) 
+        else  // No change in income
+            v[7] = v[5];
+    }
+    else
+        v[7] = v[5]; // Maintain previous debt rate if not in the adjustment period
 
-// Ensure the debt rate remains within [0,1] bounds
-v[8] = max(0, min(1, v[7]));
+    // Ensure the debt rate remains within [0,1] bounds
+    v[8] = max(0, min(1, v[7]));
 
 RESULT(v[8])
 
@@ -683,7 +727,7 @@ switch_household_tax_structure:
 
     // --- Unemployment Benefits Allocation ---
     // Allocate unemployment benefits equally among all unemployed households
-    v[6] = COUNT_CNDS(PARENT, "HOUSEHOLD", "Household_Employment_Status", "==", 0); // Count unemployed households
+    v[6] = VS(country, "Country_Unemployed_Count"); // Use the pre-calculated count of unemployed households
     v[7] = (v[6] > 0) ? v[3] / v[6] : 0;  // Distribute equally if unemployed households exist
 
     // --- Compute Gross Postbenefit Income ---
@@ -714,11 +758,11 @@ EQUATION_DUMMY("Household_Real_Disposable_Income", "Household_Nominal_Disposable
 
 
 EQUATION("Household_Stock_Loans")
-RESULT(SUM("household_loan_total_amount"))
-
-
-
-
+/*
+Household stock of loans
+*/
+    v[0] = SUM("household_loan_total_amount");
+RESULT(v[0])
 
 
 
@@ -756,6 +800,48 @@ If denominator is non-positive, assigns a default high risk value (1.1).
         v[4] = 1.1;                             // Default to high debt rate if denominator is non-positive
 
 RESULT(v[4])
+
+
+/*
+EQUATION("Household_Income_Percentile")
+/*
+Calculates this household's income percentile (0-1) relative to all households.
+This variable is updated once every annual_frequency.
+Uses SORTS to sort all households by income, then SEARCH_INSTS to find this
+household's rank directly.
+*/
+/*
+v[0] = V("annual_frequency");
+if (fmod((double) t, v[0]) == 0 && t > 0)
+{
+  // Sort all sibling households under the parent object by their average nominal income
+  SORTS(PARENT, "HOUSEHOLD", "Household_Avg_Nominal_Income", UP);
+
+  // Get the total number of households for the percentile calculation
+  v[1] = COUNT("HOUSEHOLD");
+
+  if (v[1] > 0)
+  {
+    // Find the rank of the current household (1-based). The position in the sorted
+    // list of siblings is the rank.
+    v[2] = SEARCH_INSTS(PARENT, THIS);
+
+    // Calculate percentile: (rank - 1) / (total - 1).
+    // If only one household, it's the 50th percentile.
+    v[3] = (v[1] > 1) ? ((v[2] - 1) / (v[1] - 1)) : 0.5;
+  }
+  else
+  {
+    v[3] = 0.5; // Default for case with no households
+  }
+}
+else
+{
+  // If not an update period, use the last calculated value
+  v[3] = CURRENT;
+}
+RESULT(v[3])
+*/
 
 
 EQUATION("Household_Income_Share")

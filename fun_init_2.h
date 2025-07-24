@@ -8,170 +8,168 @@ It calls all control parameters defined by the user in the control object.
 Then, it perform initial calculations to define other parameters and lagged values based only on the control parameters.
 It also writes the dependent parameters and lagged values. User do not need to do it by hand.
 Finally, it also creates objects based on control parameters. 1 object of each kind must be defined by the user first.
-It is set in a specific simple configuration: 3 sectors and 3 income classes. Next step is to generalize this variable for N sectors.
+It is set in a specific simple configuration: 3 sectors and multiple households. Next step is to generalize this variable for N sectors.
 Additionally, there is a strong hypothesis here: all sector are equals, except for how their demand is calculated.
 */
 
 //Define Global Pointers
-country=SEARCH("COUNTRY");
-external=SEARCH("EXTERNAL_SECTOR");
-government=SEARCH("GOVERNMENT");
-financial=SEARCH("FINANCIAL");
-consumption=SEARCH_CND("id_consumption_goods_sector",1);
-capital=SEARCH_CND("id_capital_goods_sector",1);
-input=SEARCH_CND("id_intermediate_goods_sector",1);
+country=SEARCH("COUNTRY"); // Country pointer
+external=SEARCH("EXTERNAL_SECTOR"); // External sector pointer
+government=SEARCH("GOVERNMENT"); // Government pointer
+financial=SEARCH("FINANCIAL"); // Financial sector pointer
+consumption=SEARCH_CND("id_consumption_goods_sector",1); // Consumption sector pointer
+capital=SEARCH_CND("id_capital_goods_sector",1); // Capital sector pointer
+input=SEARCH_CND("id_intermediate_goods_sector",1); // Intermediate sector pointer
 
 
 //Macro Parameters			
-v[6]=V("scale_autonomous_consumption");
+v[6]=V("scale_autonomous_consumption"); // Autonomous consumption scale
 
 //Household Parameters
-v[20]=V("number_of_households"); // Total number of households
-v[21]=V("wage_mean");            // Mean of log-normal wage distribution
-v[22]=V("wage_stddev");          // Standard deviation of wage distribution
-v[23]=V("profit_lambda");        // Scale parameter for q-exponential distribution
-v[25]=V("profit_q");             // Entropic index for q-exponential distribution (0 < q < 2)
-v[250]=V("profit_participation_rate"); // Fraction of households receiving profits (e.g., 0.05)
+v[21]=V("household_wage_mean");            // Mean of log-normal wage distribution
+v[22]=V("household_wage_stddev");          // Standard deviation of wage distribution
+v[23]=V("household_profit_lambda");        // Scale parameter for q-exponential distribution
+v[25]=V("household_profit_q");             // Entropic index for q-exponential distribution (0 < q < 2)
+v[250]=V("household_profit_participation_rate"); // Fraction of households receiving profits (e.g., 0.05)
 v[26]=V("household_direct_tax"); // Base tax rate for households
-v[27]=V("household_initial_propensity_import"); // Base import propensity
-v[28]=V("household_import_elasticity_price");   // Price elasticity of imports
 v[29]=V("household_skill_mean");   // Mean parameter for household skill log-normal distribution // Set household_skill_mean = -0.5 * (household_skill_stddev)^2 to ensure E[household_skill] = 1
 v[30]=V("household_skill_stddev"); // Standard deviation parameter for household skill log-normal distribution
+v[27]=V("household_avg_import_propensity"); // Economy-wide average import propensity (used to generate household-specific values)
 v[31]=V("household_avg_autonomous_consumption_adjustment"); // Global baseline for autonomous consumption adjustment
-v[19]=V("avg_propensity_to_spend"); // Average propensity to spend for approximation
+v[32]=V("household_avg_liquidity_preference_adjustment"); // Global baseline for household liquidity preference adjustment
+v[33]=V("household_avg_debt_rate_adjustment"); // Global baseline for household debt rate adjustment
 
+cur1=SEARCH_CND("id_consumption_goods_sector",1); // Consumption sector pointer
+cur2=SEARCH_CND("id_capital_goods_sector",1); // Capital sector pointer
+cur3=SEARCH_CND("id_intermediate_goods_sector",1); // Intermediate sector pointer
 
-cur1=SEARCH_CND("id_consumption_goods_sector",1);
-cur2=SEARCH_CND("id_capital_goods_sector",1);
-cur3=SEARCH_CND("id_intermediate_goods_sector",1);
+v[40]=V("fs_number_object_banks"); // Number of object banks
 
-v[40]=V("fs_number_object_banks");																			//sector control parameter
+v[41]=VS(consumption, "sector_number_object_firms"); // Number of object firms in consumption sector
+v[42]=VS(capital, "sector_number_object_firms"); // Number of object firms in capital sector
+v[43]=VS(input, "sector_number_object_firms"); // Number of object firms in intermediate sector
 
-v[41]=VS(consumption, "sector_number_object_firms");													//sector control parameter
-v[42]=VS(capital, "sector_number_object_firms");														//sector control parameter
-v[43]=VS(input, "sector_number_object_firms");															//sector control parameter
+v[44]=VS(consumption, "sector_initial_productivity"); // Initial productivity in consumption sector
+v[45]=VS(capital, "sector_initial_productivity"); // Initial productivity in capital sector
+v[46]=VS(input, "sector_initial_productivity"); // Initial productivity in intermediate sector
 
-v[44]=VS(consumption, "sector_initial_productivity");													//sector control parameter
-v[45]=VS(capital, "sector_initial_productivity");														//sector control parameter
-v[46]=VS(input, "sector_initial_productivity");															//sector control parameter
+v[47]=VS(consumption, "sector_initial_markup"); // Initial markup in consumption sector
+v[48]=VS(capital, "sector_initial_markup"); // Initial markup in capital sector
+v[49]=VS(input, "sector_initial_markup"); // Initial markup in intermediate sector
 
-v[47]=VS(consumption, "sector_initial_markup");															//sector control parameter
-v[48]=VS(capital, "sector_initial_markup");																//sector control parameter
-v[49]=VS(input, "sector_initial_markup");																//sector control parameter
+v[50]=VS(consumption, "sector_initial_wage"); // Initial wage in consumption sector
+v[51]=VS(capital, "sector_initial_wage"); // Initial wage in capital sector
+v[52]=VS(input, "sector_initial_wage"); // Initial wage in intermediate sector
 
-v[50]=VS(consumption, "sector_initial_wage");															//sector control parameter
-v[51]=VS(capital, "sector_initial_wage");																//sector control parameter
-v[52]=VS(input, "sector_initial_wage");																	//sector control parameter
+v[53]=VS(consumption, "sector_input_tech_coefficient"); // Input tech coefficient in consumption sector
+v[54]=VS(capital, "sector_input_tech_coefficient"); // Input tech coefficient in capital sector
+v[55]=VS(input, "sector_input_tech_coefficient"); // Input tech coefficient in intermediate sector
 
-v[53]=VS(consumption, "sector_input_tech_coefficient");													//sector control parameter
-v[54]=VS(capital, "sector_input_tech_coefficient");														//sector control parameter
-v[55]=VS(input, "sector_input_tech_coefficient");														//sector control parameter
+v[56]=VS(consumption, "sector_capital_output_ratio"); // Capital output ratio in consumption sector
+v[57]=VS(capital, "sector_capital_output_ratio"); // Capital output ratio in capital sector
+v[58]=VS(input, "sector_capital_output_ratio"); // Capital output ratio in intermediate sector
 
-v[56]=VS(consumption, "sector_capital_output_ratio");													//sector control parameter
-v[57]=VS(capital, "sector_capital_output_ratio");														//sector control parameter
-v[58]=VS(input, "sector_capital_output_ratio");															//sector control parameter
+v[59]=VS(consumption, "sector_rnd_revenue_proportion"); // R&D revenue proportion in consumption sector
+v[60]=VS(capital, "sector_rnd_revenue_proportion"); // R&D revenue proportion in capital sector
+v[61]=VS(input, "sector_rnd_revenue_proportion"); // R&D revenue proportion in intermediate sector
 
-v[59]=VS(consumption, "sector_rnd_revenue_proportion");													//sector control parameter
-v[60]=VS(capital, "sector_rnd_revenue_proportion");														//sector control parameter
-v[61]=VS(input, "sector_rnd_revenue_proportion");														//sector control parameter
+v[62]=VS(consumption, "sector_profits_distribution_rate"); // Profits distribution rate in consumption sector
+v[63]=VS(capital, "sector_profits_distribution_rate"); // Profits distribution rate in capital sector
+v[64]=VS(input, "sector_profits_distribution_rate"); // Profits distribution rate in intermediate sector
 
-v[62]=VS(consumption, "sector_profits_distribution_rate");												//sector control parameter
-v[63]=VS(capital, "sector_profits_distribution_rate");													//sector control parameter
-v[64]=VS(input, "sector_profits_distribution_rate");													//sector control parameter
+v[65]=VS(consumption, "sector_indirect_tax_rate"); // Indirect tax rate in consumption sector
+v[66]=VS(capital, "sector_indirect_tax_rate"); // Indirect tax rate in capital sector
+v[67]=VS(input, "sector_indirect_tax_rate"); // Indirect tax rate in intermediate sector
 
-v[65]=VS(consumption, "sector_indirect_tax_rate");														//sector control parameter
-v[66]=VS(capital, "sector_indirect_tax_rate");															//sector control parameter
-v[67]=VS(input, "sector_indirect_tax_rate");															//sector control parameter
+v[74]=v[41]+v[42]+v[43]; // Total number of firms
+v[75]=v[41]/v[74]; // Sector share of consumption firms
+v[76]=v[42]/v[74]; // Sector share of capital firms
+v[77]=v[43]/v[74]; // Sector share of intermediate firms
 
-v[74]=v[41]+v[42]+v[43];																		//total number of firms
-v[75]=v[41]/v[74];																				//sector share of firms
-v[76]=v[42]/v[74];																				//sector share of firms
-v[77]=v[43]/v[74];																				//sector share of firms
+v[100]=(v[49]*v[52]/v[46])/(1-v[49]*v[55]);	  // Intermediate sector price
+v[101]=v[47]*((v[50]/v[44])+(v[100]*v[53]));  // Consumption sector price
+v[102]=v[48]*((v[51]/v[45])+(v[100]*v[54]));  // Capital sector price
 
-v[100]=(v[49]*v[52]/v[46])/(1-v[49]*v[55]);														//intermediate sector price
-v[101]=v[47]*((v[50]/v[44])+(v[100]*v[53]));													//consumption sector price
-v[102]=v[48]*((v[51]/v[45])+(v[100]*v[54]));													//capital sector price
+v[103]=(v[50]/v[44]) + v[59]*(1-v[65])*v[101];  // Sector effective wage margin over production including RND
+v[104]=(v[51]/v[45]) + v[60]*(1-v[66])*v[102];  // Sector effective wage margin over production including RND
+v[105]=(v[52]/v[46]) + v[61]*(1-v[67])*v[100];  // Sector effective wage margin over production including RND
 
-v[103]=(v[50]/v[44]) + v[59]*(1-v[65])*v[101];													//sector effective wage margin over production including RND
-v[104]=(v[51]/v[45]) + v[60]*(1-v[66])*v[102];													//sector effective wage margin over production including RND
-v[105]=(v[52]/v[46]) + v[61]*(1-v[67])*v[100];													//sector effective wage margin over production including RND
+v[106]=v[101]*(1-v[65])*(1-v[59])-((v[50]/v[44]) + v[53]*v[100]);  // Sector effective profit margin over production
+v[107]=v[102]*(1-v[66])*(1-v[60])-((v[51]/v[45]) + v[54]*v[100]);  // Sector effective profit margin over production
+v[108]=v[100]*(1-v[67])*(1-v[61])-((v[52]/v[46]) + v[55]*v[100]);  // Sector effective profit margin over production
 
-v[106]=v[101]*(1-v[65])*(1-v[59])-((v[50]/v[44]) + v[53]*v[100]);								//sector effective profit margin over production
-v[107]=v[102]*(1-v[66])*(1-v[60])-((v[51]/v[45]) + v[54]*v[100]);								//sector effective profit margin over production
-v[108]=v[100]*(1-v[67])*(1-v[61])-((v[52]/v[46]) + v[55]*v[100]);								//sector effective profit margin over production
+v[109]=(v[101]*v[65] + v[26]*v[62]*v[106] + v[26]*v[103]) / (1 - v[26]);  // Sector effective tax-public wage (using avg tax v[26])
+v[110]=(v[102]*v[66] + v[26]*v[63]*v[107] + v[26]*v[104]) / (1 - v[26]);  // Sector effective tax-public wage (using avg tax v[26])
+v[111]=(v[100]*v[67] + v[26]*v[64]*v[108] + v[26]*v[105]) / (1 - v[26]);  // Sector effective tax-public wage (using avg tax v[26])
 
-v[109]=(v[101]*v[65] + v[26]*v[62]*v[106] + v[26]*v[103]) / (1 - v[26]);							//MODIFIED: sector effective tax-public wage (using avg tax v[26])
-v[110]=(v[102]*v[66] + v[26]*v[63]*v[107] + v[26]*v[104]) / (1 - v[26]);							//MODIFIED: sector effective tax-public wage (using avg tax v[26])
-v[111]=(v[100]*v[67] + v[26]*v[64]*v[108] + v[26]*v[105]) / (1 - v[26]);							//MODIFIED: sector effective tax-public wage (using avg tax v[26])
-
-v[112]=(v[103] + v[109])*v[27] + (v[106]*v[62])*v[27];											//MODIFIED: sector effective imports propensity (using avg import prop v[27])
-v[113]=(v[104] + v[110])*v[27] + (v[107]*v[63])*v[27];											//MODIFIED: sector effective imports propensity (using avg import prop v[27])
-v[114]=(v[105] + v[111])*v[27] + (v[108]*v[64])*v[27];											//MODIFIED: sector effective imports propensity (using avg import prop v[27])
+v[112]=(v[103] + v[109])*v[27] + (v[106]*v[62])*v[27];  // Sector effective imports propensity (using avg import prop v[27])
+v[113]=(v[104] + v[110])*v[27] + (v[107]*v[63])*v[27];  // Sector effective imports propensity (using avg import prop v[27])
+v[114]=(v[105] + v[111])*v[27] + (v[108]*v[64])*v[27];  // Sector effective imports propensity (using avg import prop v[27])
 
 // Approximate domestic spending propensity
-double avg_prop_spend_domestic = v[19] * (1 - v[27]);
+double avg_prop_spend_domestic = v[19] * (1 - v[27]); 
 
 v[115]=((avg_prop_spend_domestic + (v[27]*v[75]))*(v[103]+v[109]) + (avg_prop_spend_domestic + (v[27]*v[75]))*v[106]*v[62]) / v[101]; //MODIFIED: sector effective consumption propensity (using avg spend/import)
 v[116]=((avg_prop_spend_domestic + (v[27]*v[75]))*(v[104]+v[110]) + (avg_prop_spend_domestic + (v[27]*v[75]))*v[107]*v[63]) / v[101]; //MODIFIED: sector effective consumption propensity (using avg spend/import)
 v[117]=((avg_prop_spend_domestic + (v[27]*v[75]))*(v[105]+v[111]) + (avg_prop_spend_domestic + (v[27]*v[75]))*v[108]*v[64]) / v[101]; //MODIFIED: sector effective consumption propensity (using avg spend/import)
 
-v[118]=v[53] + ((v[27]*v[77]*(v[103]+v[109])) + (v[27]*v[77]*v[106]*v[62])) / v[100];				//MODIFIED: sector input tech coefficient (using avg import prop v[27])
-v[119]=v[54] + ((v[27]*v[77]*(v[104]+v[110])) + (v[27]*v[77]*v[107]*v[63])) / v[100];				//MODIFIED: sector input tech coefficient (using avg import prop v[27])
-v[120]=v[55] + ((v[27]*v[77]*(v[105]+v[111])) + (v[27]*v[77]*v[108]*v[64])) / v[100];				//MODIFIED: sector input tech coefficient (using avg import prop v[27])
+v[118]=v[53] + ((v[27]*v[77]*(v[103]+v[109])) + (v[27]*v[77]*v[106]*v[62])) / v[100];  // Sector input tech coefficient (using avg import prop v[27])
+v[119]=v[54] + ((v[27]*v[77]*(v[104]+v[110])) + (v[27]*v[77]*v[107]*v[63])) / v[100];  // Sector input tech coefficient (using avg import prop v[27])
+v[120]=v[55] + ((v[27]*v[77]*(v[105]+v[111])) + (v[27]*v[77]*v[108]*v[64])) / v[100];  // Sector input tech coefficient (using avg import prop v[27])
 
-v[121]=((v[27]*v[76]*(v[103]+v[109])) + (v[27]*v[76]*v[106]*v[62])) / v[102];						//MODIFIED: sector effective capital exports propensity (using avg import prop v[27])
-v[122]=((v[27]*v[76]*(v[104]+v[110])) + (v[27]*v[76]*v[107]*v[63])) / v[102];						//MODIFIED: sector effective capital exports propensity (using avg import prop v[27])
-v[123]=((v[27]*v[76]*(v[105]+v[111])) + (v[27]*v[76]*v[108]*v[64])) / v[102];						//MODIFIED: sector effective capital exports propensity (using avg import prop v[27])
+v[121]=((v[27]*v[76]*(v[103]+v[109])) + (v[27]*v[76]*v[106]*v[62])) / v[102];  // Sector effective capital exports propensity (using avg import prop v[27])
+v[122]=((v[27]*v[76]*(v[104]+v[110])) + (v[27]*v[76]*v[107]*v[63])) / v[102];  // Sector effective capital exports propensity (using avg import prop v[27])
+v[123]=((v[27]*v[76]*(v[105]+v[111])) + (v[27]*v[76]*v[108]*v[64])) / v[102];  // Sector effective capital exports propensity (using avg import prop v[27])
 
-v[124]=v[118] / (1 - v[120]);																		//sector direct and indirect input tech (uses modified v[118], v[120])
-v[125]=v[119] / (1 - v[120]);																		//sector direct and indirect input tech (uses modified v[119], v[120])
+v[124]=v[118] / (1 - v[120]);  // Sector direct and indirect input tech (uses modified v[118], v[120])
+v[125]=v[119] / (1 - v[120]);  // Sector direct and indirect input tech (uses modified v[119], v[120])
 
-v[126]=v[115] + v[117] * v[124];																	//sector effective direct and indirect propensity to consume (uses modified inputs)
-v[127]=v[116] + v[117] * v[125];																	//sector effective direct and indirect propensity to consume (uses modified inputs)
+v[126]=v[115] + v[117] * v[124];  // Sector effective direct and indirect propensity to consume (uses modified inputs)
+v[127]=v[116] + v[117] * v[125];  // Sector effective direct and indirect propensity to consume (uses modified inputs)
 
-v[128]=v[121] + v[123] * v[124];																	//sector effective direct and indirect capital propensity (uses modified inputs)
-v[129]=v[122] + v[123] * v[125];																	//sector effective direct and indirect capital propensity (uses modified inputs)
+v[128]=v[121] + v[123] * v[124];  // Sector effective direct and indirect capital propensity (uses modified inputs)
+v[129]=v[122] + v[123] * v[125];  // Sector effective direct and indirect capital propensity (uses modified inputs)
 
 //Begin Aggregate Calculations
-v[141]=v[6]*v[41]/(1-v[126]-v[127]*v[128]/(1-v[129]));				//consumption sector initial demand
-v[142]=(v[141]*v[128])/(1-v[129]);									//capital sector initial demand
-v[143]=v[141]*v[124]+v[142]*v[125];									//intermediate sector initial demand
+v[141]=v[6]*v[41]/(1-v[126]-v[127]*v[128]/(1-v[129]));  // Consumption sector initial demand
+v[142]=(v[141]*v[128])/(1-v[129]);  // Capital sector initial demand
+v[143]=v[141]*v[124]+v[142]*v[125];  // Intermediate sector initial demand
 
-v[144]=v[109]*v[141] + v[110]*v[142] + v[111]*v[143];							 				//total taxes
-v[145]=v[65]*v[101]*v[141] + v[66]*v[102]*v[142] + v[67]*v[100]*v[143];							//indirect taxes
-v[146]=v[103]*v[141] + v[104]*v[142] + v[105]*v[143] + v[144];									//total wages including public
-v[147]=v[106]*v[141] + v[107]*v[142] + v[108]*v[143];							 				//total profits
-v[148]=v[62]*v[106]*v[141] + v[63]*v[107]*v[142] + v[64]*v[108]*v[143];							//distributed profits
-v[149]=v[112]*v[141] + v[113]*v[142] + v[114]*v[143];											//total imports
-v[150]=v[146]+v[147]+v[145];																	//GDP
-v[151]=(v[141]*v[101]+v[142]*v[102]+v[143]*v[100])/(v[141]+v[142]+v[143]);						//initial price index
+v[144]=v[109]*v[141] + v[110]*v[142] + v[111]*v[143];  // Total taxes
+v[145]=v[65]*v[101]*v[141] + v[66]*v[102]*v[142] + v[67]*v[100]*v[143];  // Indirect taxes
+v[146]=v[103]*v[141] + v[104]*v[142] + v[105]*v[143] + v[144];  // Total wages including public
+v[147]=v[106]*v[141] + v[107]*v[142] + v[108]*v[143];  // Total profits
+v[148]=v[62]*v[106]*v[141] + v[63]*v[107]*v[142] + v[64]*v[108]*v[143];  // Distributed profits
+v[149]=v[112]*v[141] + v[113]*v[142] + v[114]*v[143];  // Total imports
+v[150]=v[146]+v[147]+v[145];  // GDP
+v[151]=(v[141]*v[101]+v[142]*v[102]+v[143]*v[100])/(v[141]+v[142]+v[143]);  // Initial price index
 
-v[152]=V("initial_firm_desired_debt_rate");
-v[153]=V("initial_firm_liquidity_preference");
-v[155]=V("household_initial_max_debt_rate");
-v[156]=V("household_initial_liquidity_preference");
+v[152]=V("initial_firm_desired_debt_rate");			// Initial firm desired debt rate
+v[153]=V("initial_firm_liquidity_preference");		// Initial firm liquidity preference
+v[155]=V("household_initial_max_debt_rate");		// Initial household max debt rate
+v[156]=V("household_initial_liquidity_preference");	// Initial household liquidity preference
 
-v[157]=V("scale_prod_cap");
-v[158]=V("scale_bank_pro");
-v[159]=V("scale_debt");
+v[157]=V("scale_prod_cap"); // Scale production capacity
+v[158]=V("scale_bank_pro"); // Scale bank profits
+v[159]=V("scale_debt"); // Scale debt
 
 //Begin Writting Macro Variables
-		WRITELLS(country,"Country_Nominal_Exports", v[149], 0, 1);
-		WRITELLS(country,"Country_Nominal_Imports", v[149], 0, 1);
-		WRITELLS(country,"Country_Annual_Growth", 0, 0, 1);													//zero by definition, no growth initally
-		WRITELLS(country,"Country_Annual_Real_Growth", 0, 0, 1);                 							//zero by definition, no growth initally
-		WRITELLS(country,"Country_Annual_Inflation", 0, 0, 1);	
-	for (i=1 ; i<=(V("annual_frequency")+1) ; i++)                  												//for (annual period +1) lags
+		WRITELLS(country,"Country_Nominal_Exports", v[149], 0, 1); // Country nominal exports
+		WRITELLS(country,"Country_Nominal_Imports", v[149], 0, 1); // Country nominal imports
+		WRITELLS(country,"Country_Annual_Growth", 0, 0, 1); // Country annual growth (zero by definition, no growth initially)
+		WRITELLS(country,"Country_Annual_Real_Growth", 0, 0, 1); // Country annual real growth (zero by definition, no growth initially)
+		WRITELLS(country,"Country_Annual_Inflation", 0, 0, 1); // Country annual inflation
+	for (i=1 ; i<=(V("annual_frequency")+1) ; i++) // for (annual period +1) lags
 		{
-		WRITELLS(country,"Country_Price_Index", v[151], 0, i);									 			//writes Price_Index, all initial price index is 1
-		WRITELLS(country,"Country_Consumer_Price_Index", v[101], 0, i);          							//writes Consumper_Price_Index, all initial price index is 1
-		WRITELLS(country,"Country_Capital_Goods_Price", v[102], 0, i);
-		WRITELLS(country,"Country_Avg_Productivity", AVE("sector_initial_productivity"), 0, i);
+		WRITELLS(country,"Country_Price_Index", v[151], 0, i); // writes Price_Index, all initial price index is 1
+		WRITELLS(country,"Country_Consumer_Price_Index", v[101], 0, i); // writes Consumper_Price_Index, all initial price index is 1
+		WRITELLS(country,"Country_Capital_Goods_Price", v[102], 0, i); // writes Capital_Goods_Price
+		WRITELLS(country,"Country_Avg_Productivity", AVE("sector_initial_productivity"), 0, i); // writes Avg_Productivity
 		}
 	for (i=1 ; i<=(2*V("annual_frequency")) ; i++)                  												//for (2*annual_period) lags
 		{
-		WRITELLS(country,"Country_GDP", v[150], 0, i);                     	 								//GDP
-		WRITELLS(country,"Country_Real_GDP", (v[150]/v[151]), 0, i);                  						//Real GDP will be equal to nominal GDP because price index always begins as 1
+		WRITELLS(country,"Country_GDP", v[150], 0, i); // writes GDP
+		WRITELLS(country,"Country_Real_GDP", (v[150]/v[151]), 0, i); // writes Real GDP (will be equal to nominal GDP because price index always begins as 1)
 		}
 
 
@@ -181,13 +179,11 @@ v[169] = 0;  // Profit income median set to 0 (profits distributed during simula
 v[170] = v[168] + v[169];  // Combined theoretical median income (wage only initially)
 
 //Begin Writing Household Variables
-CYCLE(cur, "HOUSEHOLDS")
+CYCLE(cur, "HOUSEHOLDS") // Cycle through all households
 {
     // Initialize household-specific parameters with random variations around base values
-    // Base values read earlier: v[26]=tax, v[27]=import_prop, v[28]=import_elast
     v[163] = v[26];  // Flat tax rate for all households
     v[164] = max(0, min(1, v[27] * norm(1.0, 0.20)));  // Household-specific import propensity (normal distribution, σ=0.20)
-    v[165] = max(0.1, min(2.0, v[28] * norm(1.0, 0.25)));  // Household-specific price elasticity (normal distribution, σ=0.25, realistic bounds)
     v[166] = max(0, min(1, v[31] * norm(1.0, 0.20)));  // Household-specific autonomous consumption adjustment (normal distribution, σ=0.20)
 
     // Generate initial income based on distributions defined earlier
@@ -213,7 +209,7 @@ CYCLE(cur, "HOUSEHOLDS")
     v[175] = max(0.05, min(1.3, v[174]));
 
     // Initialize household lagged variables and stocks
-    // Use v[101] = consumption sector price, v[20] = number of households, v[6]=total autonomous consumption scale
+    // Use v[101] = consumption sector price, Country_Total_Population = number of households, v[6]=total autonomous consumption scale
     // Use v[155]=initial max debt rate, v[156]=initial liquidity preference
 	for (i=1; i<=V("annual_frequency"); i++)		// Loop for each period in a year
 		{
@@ -222,7 +218,7 @@ CYCLE(cur, "HOUSEHOLDS")
 		}
     WRITELLS(cur, "Household_Avg_Nominal_Income", v[167], 0, 1);
     WRITELLS(cur, "Household_Avg_Real_Income", (v[167]/v[101]), 0, 1);
-    WRITELLS(cur, "Household_Real_Autonomous_Consumption", v[6]/v[20], 0, 1); // Distribute total autonomous consumption evenly
+    WRITELLS(cur, "Household_Real_Autonomous_Consumption", v[6]/VS(country, "Country_Total_Population"), 0, 1); // Distribute total autonomous consumption evenly
     WRITELLS(cur, "Household_Liquidity_Preference", v[156], 0, 1); // Use global initial value
     WRITELLS(cur, "Household_Max_Debt_Rate", v[155], 0, 1);      // Use global initial value
     WRITELLS(cur, "Household_Debt_Rate", 0, 0, 1);              // 0, no debt initially
@@ -232,9 +228,17 @@ CYCLE(cur, "HOUSEHOLDS")
     // Store household-specific parameters for later use if needed
     WRITES(cur, "household_direct_tax", v[163]);
     WRITES(cur, "household_import_propensity", v[164]);
-    WRITES(cur, "household_import_elasticity", v[165]);
     WRITES(cur, "household_autonomous_consumption_adjustment", v[166]); // Store persistent autonomous consumption adjustment
-    WRITES(cur, "household_propensity_baseline", v[175]); // Store calculated propensity baseline
+    
+    // Generate persistent household-specific liquidity preference adjustment parameter
+    // Use normal distribution around the household average baseline for consistency
+    v[178] = max(0, min(1, v[32] * norm(1.0, 0.6))); // +-60% individual variation around household_avg_liquidity_preference_adjustment
+    WRITES(cur, "household_liquidity_preference_adjustment", v[178]); // Store persistent liquidity preference adjustment
+
+    // Generate persistent household-specific debt rate adjustment parameter
+    // Use normal distribution around the household average baseline for consistency
+    v[179] = max(0, min(1, v[33] * norm(1.0, 0.4))); // +-40% individual variation around household_avg_debt_rate_adjustment
+    WRITES(cur, "household_debt_rate_adjustment", v[179]); // Store persistent debt rate adjustment
 
     // Assign persistent skill to each household (log-normal distribution)
     v[100] = lnorm(v[29], v[30]);  // Set household_skill_mean = -0.5 * (household_skill_stddev)^2 to ensure E[household_skill] = 1
@@ -513,6 +517,8 @@ CYCLE(cur, "SECTORS")
 
 PARAMETER
 RESULT(0)
+
+/*
 
 ///////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// INITIALIZATION 2 ///////////////////////////////

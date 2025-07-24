@@ -32,7 +32,8 @@ RESULT(max(0,v[5]))
 
 
 EQUATION("Class_Imports_Share")
-	v[1]=V("class_initial_propensity_import");							//class propensity to import
+
+	v[1]=V("class_initial_propensity_import");						//class propensity to import
 	v[3]=VS(consumption, "Sector_Avg_Price");                       //consumption sector average price
 	v[4]=VS(consumption, "Sector_External_Price");                  //consumption sector external price
 	v[5]=VS(external,"Country_Exchange_Rate");						//exchange rate

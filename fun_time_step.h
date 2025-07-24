@@ -253,7 +253,8 @@ V("Country_Likelihood_Crisis");
 V("Sector_Employment");                                 						    	
 V("Sector_Idle_Capacity");									
 V("Country_Idle_Capacity");  
-                                    	
+V("Country_Gini_Income");
+V("Country_Gini_Wealth");
 
 /*****ANALYSIS*****/
 V("Household_Income_Share");
@@ -281,8 +282,3 @@ V("PDEBT_G");
 V("PROD_G");
 
 RESULT(t)
-
-
-
-
-

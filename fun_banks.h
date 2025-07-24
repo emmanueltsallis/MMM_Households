@@ -232,7 +232,7 @@ RESULT(v[7])
 
 EQUATION("Bank_Stock_Loans_Long_Term")
 /*
-Total Stock of short term loans, firms and classes
+Total Stock of long term loans, firms and households portion
 */
 
 	v[10]=V("bank_id");
@@ -257,7 +257,7 @@ RESULT(v[0])
 
 EQUATION("Bank_Total_Stock_Loans")
 /*
-Total Stock of loans
+Total Stock of loans (both long and short term)
 */
 	v[0]=V("Bank_Stock_Loans_Long_Term");
 	v[1]=V("Bank_Stock_Loans_Short_Term");

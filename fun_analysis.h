@@ -309,7 +309,7 @@ RESULT(LAG_GROWTH(p,"NX_r",1))
 /*****MACRO SHARE STATS*****/
 
 EQUATION("CGDP")
-RESULT(V("Country_Total_Classes_Expenses")/V("Country_GDP_Demand"))
+RESULT(V("Country_Total_Household_Expenses")/V("Country_GDP_Demand"))
 
 EQUATION("IGDP")
 RESULT(V("Country_Total_Investment_Expenses")/V("Country_GDP_Demand"))

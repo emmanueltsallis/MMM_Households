@@ -2,8 +2,8 @@ MICRO-MACRO MULTISECTORAL MODEL - HOUSEHOLDS DISAGGREGATION (ver. 4.0)
 
 *********************************************************************************************************************************************
 
-This is a (preliminary) new version of the model created by Dweck (2006) and used in Dweck, Vianna and Barbosa (2018). 
-Coded and copyright by Matheus Vianna.
+This is the household-disaggregated version of the Finance-Augmented MMM model, created by Vianna (2021) which itself an expansion of Dweck (2006) and used in Dweck, Vianna and Barbosa (2018). 
+Coded by Emmanuel Tsallis (advised by Italo Pedrosa and Matheus Vianna).
 
 *********************************************************************************************************************************************
 
@@ -20,8 +20,8 @@ MODEL DESCRIPTION AND FEATURES:
 The MMM model is a multisectoral micro-macro dynamic model of simulation, that combines theorectical foundations from pos-keynesian, kaleckian and schumpeterian
 approaches, useful to investigate general dynamic properties of capitalist economies.
 
-Multisectoral: most of the general dynamic properties derives from the intersectoral relationships, using input-output matrices to determine intersectoral demands. Additionally, a matrix of income apropriation determines income distribution among dierent classes from functional distribution. Sectors basically differ by how they fit in the productive chain, which can be capital goods production, intermediate goods production or consumption goods production. Sectoral demands are determined endogenously by firms and income classes decisions.
-	The core version runs with the minimum number of sector of each type (1), but the model can be generalized for more than one sector of each type, employing input-output matrices to generate sectoral demands, as proposed by Possas (1983). The number of income classes can also be generalized.  
+Multisectoral: most of the general dynamic properties derives from the intersectoral relationships, using input-output matrices to determine intersectoral demands. Additionally, a matrix of income apropriation determines income distribution among different households from functional distribution. Sectors basically differ by how they fit in the productive chain, which can be capital goods production, intermediate goods production or consumption goods production. Sectoral demands are determined endogenously by firms and household decisions.
+	The core version runs with the minimum number of sector of each type (1), but the model can be generalized for more than one sector of each type, employing input-output matrices to generate sectoral demands, as proposed by Possas (1983). The number of households is determined by the modeler and can be adjusted for different levels of disaggregation.  
 	Additionally, the model have two "exoneous" blocks that were simplified in the core version: Government and External Sector.
 
 1. Dynamic:
@@ -99,8 +99,8 @@ If the firm cannot meet demand (due to capacity, input constraints, or labor sup
 	- Total Wages: Sum of wages paid by all firms and government to individuals (including R&D wages, if relevant).
 	- Total Profits: Sector-level revenues minus variable costs (wages, inputs, indirect taxes, and R&D expenses). A portion of these profits may be distributed to individual shareholders.
 (ii) Personal (Individual) Distribution:
-	- Each individual receives wage income (if employed) plus any distributed profits or interest.
-	- Formation of Income Classes: Individuals are grouped into classes based on their resulting income (e.g., low-income, middle-income, high-income). These classes are then used for reporting, policy, or other aggregated dynamics.
+	- Each household receives wage income (if employed) plus any distributed profits or interest.
+	- Individual household income and consumption patterns are tracked separately, allowing for detailed analysis of income distribution and consumption behavior.
 
 11.Investment Decision (Firms)
 Fourth Firm Decision: At the end of the investment cycle, each firm decides if and how much to invest, subject to financial constraints.
@@ -126,8 +126,7 @@ HOW TO READ THE CODE:
 --Most COUNTRY variable names begin with "Country_"
 --Most SECTOR variable names begin with "Sector_"
 --Most FIRM variable names begin with "Firm_"
---Most CLASS variable names begin with "Class_"
---Most AGENT variable names begin with "Agent_"
+--Most HOUSEHOLD variable names begin with "Household_"
 --Most GOVERNMENT variable names begin with "Government_"
 --Most FINANCIAL SECTOR variable names begin with "Financial_Sector_"
 --Most BANK variable names begin with "Bank_"
@@ -163,7 +162,7 @@ There are some global pointers used to identify specific objects. They are defin
 	"external"
 	"country"
 	"centralbank"
-	"household"
+	"households"
 
 *************************************************************************************************
 
@@ -180,7 +179,7 @@ Hypothesis:
 4. Stock-Flow Consistency: All initial stock-flow ratios are constant, ensuring coherence between stocks (e.g., capital, savings) and flows (e.g., income, production).
 5. Investment: There is no initial expansion or replacement investment; initial investments only offset physical depreciation of capital goods.
 
-To better understand that procedure, see variable "init_2".
+To better understand that procedure, see variable "Initialization_2".
 
 Essential calibration parameters: these parameters must be defined by the user.
 -"country_initial_depreciation_share_GDP"							:defines the initial share of private investment on GDP, and initial GDP, given the initial private investment
@@ -212,6 +211,28 @@ Essential calibration parameters: these parameters must be defined by the user.
 -"sector_capital_output_ratio"										:defines the capital-output-ratio of each sector
 -"sector_desired_degree_capacity_utilization"						:defines the desitred degree of capacity utilization of each sector
 
+Household disaggregation parameters:
+-"household_wage_mean"												:defines the mean parameter for household wage log-normal distribution
+-"household_wage_stddev"											:defines the standard deviation parameter for household wage log-normal distribution
+-"household_profit_lambda"											:defines the scale parameter for household profit q-exponential distribution
+-"household_profit_q"												:defines the entropic index for household profit q-exponential distribution (0 < q < 2)
+-"household_profit_participation_rate"								:defines the fraction of households receiving profits (e.g., 0.05)
+-"household_direct_tax"												:defines the base tax rate for households
+-"household_avg_import_propensity"									:defines the economy-wide average import propensity (used to generate household-specific values)
+-"household_skill_mean"												:defines the mean parameter for household skill log-normal distribution
+-"household_skill_stddev"											:defines the standard deviation parameter for household skill log-normal distribution
+-"household_avg_autonomous_consumption_adjustment"					:defines the global baseline for household autonomous consumption adjustment
+-"household_avg_liquidity_preference_adjustment"					:defines the global baseline for household liquidity preference adjustment
+-"household_avg_debt_rate_adjustment"								:defines the global baseline for household debt rate adjustment
+-"household_avg_propensity_to_spend"								:defines the average propensity to spend for approximation
+-"household_initial_max_debt_rate"									:defines the initial maximum debt rate for households
+-"household_initial_liquidity_preference"							:defines the initial liquidity preference for households
+-"household_propensity_steepness"									:defines the steepness of the sigmoid propensity function
+-"household_propensity_center"										:defines the center of the sigmoid propensity function
+-"household_propensity_min"											:defines the minimum value of the sigmoid propensity function
+-"household_elasticity_base_factor"									:defines the base factor for dynamic elasticity calculation
+-"household_import_propensity"										:defines the household-specific import propensity
+
 *******************************************************************************************************
 
 MODEL CONTROL PARAMETERS
@@ -223,7 +244,7 @@ MODEL CONTROL PARAMETERS
 "begin_monetary_policy"												:defines when reactive monetary policy begins. -1 = fixed basic interest rate
 "begin_surplus_target_rule"											:defines when surplus target fiscal rule begins. -1 = no surplus target
 
-"switch_class_tax_structure"										:defines different sources of direct taxation
+"switch_household_tax_structure"									:defines different sources of direct taxation
 	0= No Income Taxation
 	1= Taxation on Wages Only
 	2= Taxation on Profits Only
@@ -303,7 +324,7 @@ OTHER RELEVANT PARAMETERS
 	"fs_spread_deposits"											:defines the negative spread applied over basic interest rate to determine deposits interest rate
 	"fs_spread_short_term"											:defines the positive spread applied over basic interest rate to determine short-term loans interest rate
 	"fs_spread_long_term"											:defines the positive spread applied over basic interest rate to determine long-term loans interest rate
-	"fs_risk_premium_class"											:defines the percentage of classes debt rate to be applied as risk premium to specific interest rates
+	"fs_risk_premium_household"										:defines the percentage of households debt rate to be applied as risk premium to specific interest rates
 	"fs_risk_premium_short_term"									:defines the percentage of firms debt rate to be applied as risk premium to specific short-term interest rates
 	"fs_risk_premium_long_term"										:defines the percentage of firms debt rate to be applied as risk premium to specific long-term interest rates
 	
@@ -358,7 +379,3 @@ Sim_5
 --Simples Government (Only Wages)
 --Fixed Exchange Rate
 --No Credit Rationing
-
-
-
-

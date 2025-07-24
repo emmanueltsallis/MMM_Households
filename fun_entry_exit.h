@@ -32,14 +32,14 @@ CYCLE(cur1, "SECTORS")
       //plog("\nFirm Deleted - Small Market Share");			//write on log window
       	if (v[7]>=v[6])											//firm pays current debt with current deposits 
       		{
-      		v[11]=v[11]+(v[7]-v[6]);							//deposits distributed to income classes (no need to substract from bank's stock)
+      		v[11]=v[11]+(v[7]-v[6]);							//deposits distributed to households (no need to substract from bank's stock)
       		v[12]=v[12]+v[2];									//available productive capacity
       		v[14]=v[14];										//defaulted loans
       		v[20]=v[20];										//bankruptcy events
       		}
       	else													//if firm can not pay current debt with current deposits
       		{
-       		v[11]=v[11];										//deposits distributed to income classes (no need to substract from bank's stock)
+       		v[11]=v[11];										//deposits distributed to households (no need to substract from bank's stock)
       		v[12]=v[12]+v[2];									//available productive capacity
       		v[14]=v[14]+(v[6]-v[7]);							//defaulted loans
       		v[20]=v[20];										//bankruptcy events
@@ -57,14 +57,14 @@ CYCLE(cur1, "SECTORS")
 		//plog("\nFirm Deleted - High Debt");					//write on log window
       	if (v[7]>=v[6])											//firm pays current debt with current deposits 
       		{
-      		v[11]=v[11]+(v[7]-v[6]);							//deposits distributed to income classes (no need to substract from bank's stock)
+      		v[11]=v[11]+(v[7]-v[6]);							//deposits distributed to households (no need to substract from bank's stock)
       		v[12]=v[12]+v[2];									//available productive capacity
       		v[14]=v[14];										//defaulted loans
       		v[20]=v[20]+1;										//bankruptcy events
       		}
       	else													//if firm can not pay current debt with current deposits
       		{
-       		v[11]=v[11];										//deposits distributed to income classes (no need to substract from bank's stock)
+       		v[11]=v[11];										//deposits distributed to households (no need to substract from bank's stock)
       		v[12]=v[12]+v[2];									//available productive capacity
       		v[14]=v[14]+(v[6]-v[7]);							//defaulted loans
       		v[20]=v[20]+1;										//bankruptcy events
@@ -77,7 +77,7 @@ CYCLE(cur1, "SECTORS")
 		}
 		else
 		{
-        v[11]=v[11];											//deposits distributed to income classes (no need to substract from bank's stock)
+        v[11]=v[11];											//deposits distributed to households (no need to substract from bank's stock)
       	v[12]=v[12];											//available productive capacity
       	v[14]=v[14];					  						//defaulted loans
       	v[20]=v[20];											//bankruptcy events
@@ -136,9 +136,9 @@ RESULT(v[9])
 
 /*
 EQUATION("Entry")
-v[26]=MAXL("Class_Stock_Deposits", 1);							//check current stock of deposits of all classes
-cur=SEARCH_CNDL("Class_Stock_Deposits", v[26], 1);
-v[24]=VLS(cur, "Class_Stock_Deposits", 1);							//check current stock of deposits of all classes
+v[26]=MAXL("Household_Stock_Deposits", 1);							//check current stock of deposits of all households
+cur=SEARCH_CNDL("Household_Stock_Deposits", v[26], 1);
+v[24]=VLS(cur, "Household_Stock_Deposits", 1);							//check current stock of deposits of all households
 v[25]=V("Exit_Deposits_Distributed");
 v[28]=v[24]+v[25];
 SORT("SECTORS", "Sector_Profit_Rate", "DOWN");
