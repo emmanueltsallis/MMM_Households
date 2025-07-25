@@ -5,8 +5,8 @@ EQUATION("Government_Desired_Wages")
 Priority expenses.
 If there are no maximum expenses, it is adjusted by average productivity growth and inflation.
 */                                     
-	v[0]= LAG_GROWTH(consumption, "Sector_Avg_Price", 1, 1);		   		
-	v[1]=V("government_real_growth");
+	v[0]= LAG_GROWTH(consumption, "Country_Consumer_Price_Index", 1, 1);		   		
+	v[1]=V("government_real_wage_growth");
 	v[2]=CURRENT*(1+v[0]+v[1]);
 RESULT(max(0,v[2]))
 
@@ -51,7 +51,7 @@ EQUATION("Government_Desired_Investment")
 Desired Investment Expenses
 Adjusted by a desired real growth rate and avg capital price growth
 */
-	v[0]=V("government_real_growth");		
+	v[0]=V("government_real_investment_growth");		
 	v[1]=LAG_GROWTH(capital, "Sector_Avg_Price", 1, 1);
 	v[2]=CURRENT*(1+v[0]+v[1]);
 RESULT(max(0,v[2]))
@@ -62,7 +62,7 @@ EQUATION("Government_Desired_Consumption")
 Desired Consumption Expenses
 Adjusted by a desired real growth rate and avg consumption price growth
 */
-	v[0]=V("government_real_growth");   
+	v[0]=V("government_real_consumption_growth");   
 	v[1]= LAG_GROWTH(consumption, "Sector_Avg_Price", 1, 1);
 	v[2]=CURRENT*(1+v[0]+v[1]);
 RESULT(max(0,v[2]))
@@ -73,7 +73,7 @@ EQUATION("Government_Desired_Inputs")
 Desired Intermediate Expenses
 Adjusted by a desired real growth rate and avg input price growth
 */
-	v[0]=V("government_real_growth");      
+	v[0]=V("government_real_input_growth");      
 	v[1]=LAG_GROWTH(input, "Sector_Avg_Price", 1, 1);
 	v[2]=CURRENT*(1+v[0]+v[1]);
 RESULT(max(0,v[2]))
@@ -86,36 +86,38 @@ EQUATION("Government_Surplus_Rate_Target")
 /*
 Adjusts government surplus target based on debt to gdp evolution
 */
-	v[0]=V("government_max_surplus_target");                     
-	v[1]=V("government_min_surplus_target");
-	v[2]=CURRENT;                   						   //last period's target
-	v[3]=VL("Government_Debt_GDP_Ratio",1);                    //current debt to gdp ratio
-	v[8]=VL("Government_Debt_GDP_Ratio",2);
-	v[4]=V("government_max_debt_ratio");                       //maximum debt to gdp accepted, parameter
-	v[5]=V("government_min_debt_ratio");                       //minimum debt to gdp accepted, parameter
-	v[6]=V("government_surplus_target_adjustment");			   //adjustment parameter
-	v[9]=V("begin_flexible_surplus_target");
-	v[10]=V("annual_frequency");
-	v[11]= fmod((double) t-1,v[10]);
-	if(t>=v[9]&&v[9]!=-1&&v[11]==0)
+	v[0]=V("annual_frequency");
+	v[1]=V("government_max_surplus_target");                     
+	v[2]=V("government_min_surplus_target");
+	v[3]=LAG_GROWTH(p, "Government_Debt_GDP_Ratio", v[0], 1);
+	v[4]=LAG_AVE(p,"Government_Debt_GDP_Ratio",v[0],1);        //annual average debt rate
+	v[5]=V("government_max_debt_ratio");                       //maximum debt to gdp accepted, parameter
+	v[6]=V("government_min_debt_ratio");                       //minimum debt to gdp accepted, parameter
+	v[7]=V("government_surplus_target_adjustment");			   //adjustment parameter
+	v[8]=V("begin_flexible_surplus_target");
+	
+	v[9]= fmod((double) t-1,v[0]);
+	if(t>=v[8]&&v[8]!=-1&&v[9]==0)
 	{
-	if(v[3]>v[4])                           		   //if debt to gdp is higher than accepted 
-		v[7]=v[2]+v[6];							       //increase surplus target
-	else if (v[3]<v[5])                     		   //if debt to gdp is lower than accepted 
-		v[7]=v[2]-v[6];								   //deacrease surplus target
-	else											   //if debt to gdp is between acceptable band
-		{
-		if(v[3]>v[8])
-			v[7]=v[2]+v[6];							   //increase surplus target
+	if(v[4]>v[5])                           		   								 //if debt to gdp is higher than accepted 
+		v[10]=CURRENT+v[7];
+	else if (v[4]<v[6])                     		  								 //if debt to gdp is lower than accepted 
+		v[10]=CURRENT-v[7];
+	else
+	{		//if debt to gdp is between acceptable band
+		if(v[3]>0)
+			v[10]=CURRENT+v[7];
+		if(v[3]<0)
+			v[10]=CURRENT-v[7];
 		else
-			v[7]=v[2];		
-		}		
+			v[10]=CURRENT;
 	}
-	else                                               //if flexible surplus target rule is not active
-		v[7]=v[2];                                     //do not change surplus taget  
+	}
+	else                                               								 //if flexible surplus target rule is not active
+		v[10]=CURRENT;                                    							 //do not change surplus taget  
 		
-	v[8]=max(min(v[0],v[7]),v[1]);
-RESULT(v[8])
+	v[11]=max(min(v[1],v[10]),v[2]);
+RESULT(v[11])
 
 
 EQUATION("Government_Max_Expenses_Surplus")
@@ -136,7 +138,7 @@ EQUATION("Government_Max_Expenses_Ceiling")
 /*
 Government Max Expenses determined by Expenses Ceiling Target Fiscal rule
 */
-	v[1]=LAG_GROWTH(consumption, "Sector_Avg_Price", 1, 1);
+	v[1]=LAG_GROWTH(consumption, "Country_Consumer_Price_Index", 1, 1);
 	v[2]=VL("Government_Effective_Expenses",1);
 	v[3]=v[2]*(1+v[1]);
 RESULT(v[3])
@@ -197,7 +199,7 @@ if(v[0]==-1)                                               //no fiscal rule
 	v[9]=v[2];    										   //government unemployment benefits equal 0
 	v[10]=v[3];                                            //government consumption equal desired
 	v[11]=v[5];                                            //government intermediate equal desired
-	v[12]=v[4];                                            //government investment demand equals desired
+	v[15]=v[4];                                            //government investment demand equals desired
 }
 else
 {
@@ -264,9 +266,17 @@ EQUATION("Government_Surplus_GDP_Ratio")
 	v[3]= v[2]!=0? v[1]/v[2] : 0;
 RESULT(v[3])
 
-	
+EQUATION("Government_Fiscal_Multiplier")
+	v[0]=LAG_GROWTH(p, "Government_Effective_Expenses",V("annual_frequency"));
+	v[1]=LAG_GROWTH(country, "Country_GDP",V("annual_frequency"));
+	v[2]= v[0]!=0? v[1]/v[0] : 0;
+RESULT(v[2])
 
-
+EQUATION("Government_Investment_GDP_Ratio")
+	v[1]=V("Government_Effective_Investment");
+	v[2]=V("Country_GDP");
+	v[3]= v[2]!=0? v[1]/v[2] : 0;
+RESULT(v[3])
 
 
 

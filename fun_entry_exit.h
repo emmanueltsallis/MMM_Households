@@ -25,7 +25,7 @@ CYCLE(cur1, "SECTORS")
      v[7]=VS(cur, "Firm_Stock_Deposits");
      v[8]=VS(cur, "Firm_Capital");
      v[9]=VS(cur, "firm_bank");
-	 cur2=SEARCH_CNDS(root, "bank_id", v[9]);
+	 cur2=SEARCH_CNDS(ROOT, "bank_id", v[9]);
 	 
      if ( v[1] <= 0.001 && i > 1 && t>(v[0]+v[3]))				//if firm's market share is near zero
      {
@@ -379,6 +379,7 @@ This variable acumulates the productive capacity that exited the sector minus th
 	v[2]=VL("Sector_Productive_Capacity_Available", 1);
 	v[3]=v[2]-v[1]+v[0];
 RESULT(v[3])
+
 
 
 

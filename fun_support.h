@@ -77,8 +77,8 @@ double LAG_GROWTH( object *obj , const char *var , int lag = 0, int lag2 = 0)
 /*
 qexponentialcdf(q, lambda, x)
 Returns the CDF of the q-exponential distribution with parameters q (shape) and lambda (scale), evaluated at x.
-- For 1 ≤ q < 2: support is x ≥ 0 (infinite)
-- For 0 < q < 1: support is 0 ≤ x < 1/((1-q)*lambda) (finite)
+- For 1 ? q < 2: support is x ? 0 (infinite)
+- For 0 < q < 1: support is 0 ? x < 1/((1-q)*lambda) (finite)
 If parameters or x are out of support, prints a warning to stderr and returns NAN.
 Parameters:
     q      : entropic index parameter (0 < q < 2)
@@ -121,8 +121,8 @@ Returns a random sample from the q-exponential distribution with parameters q (s
 Quantile function:
     x = [1 - (1-U)^{(1-q)/(2-q)}] / [(1-q)*lambda]
 where U ~ Uniform(0,1)
-- For 1 ≤ q < 2: support is x ≥ 0 (infinite)
-- For 0 < q < 1: support is 0 ≤ x < 1/((1-q)*lambda) (finite)
+- For 1 ? q < 2: support is x ? 0 (infinite)
+- For 0 < q < 1: support is 0 ? x < 1/((1-q)*lambda) (finite)
 If parameters are out of support, prints a warning to stderr and returns NAN.
 Parameters:
     q  : entropic index parameter (0 < q < 2)
@@ -158,4 +158,5 @@ double qexponential(double q, double lambda)
     }
     return x;
 }
+
 

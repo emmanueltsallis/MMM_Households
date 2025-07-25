@@ -92,3 +92,4 @@ Firm effective production over firm productive capacity
 	v[1]=VL("Firm_Productive_Capacity",1);
 	v[2]= v[1]!=0? v[0]/v[1] : 0;
 RESULT(v[2])
+

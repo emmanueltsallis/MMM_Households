@@ -61,7 +61,7 @@ EQUATION("Firm_Delivery_Delay")
 Firm Variable. Calculates the share of effevtive orders that are not met by firm's capacity. 
 If all demand is met, this variable's result is 1. The higher the demand not met, higher is this variable.
 */
-	v[0]=V("Firm_Effective_Orders");;               //firm's effective orders
+	v[0]=V("Firm_Effective_Orders");               //firm's effective orders
 	v[1]=V("Firm_Sales");                           //firm's sales
 	v[2]= v[1]!=0? v[0]/v[1] : 1;                   //delivery delay will be determined by the ratio between effective orders and sales
 RESULT(v[2])
@@ -93,6 +93,7 @@ Effective market share is given by firm's sales over total sales of the sector
 	v[1]=V("Sector_Sales");
 	v[2]= v[1]!=0? v[0]/v[1] : 0;
 RESULT(v[2])
+
 
 
 

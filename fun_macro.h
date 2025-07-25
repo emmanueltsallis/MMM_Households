@@ -4,10 +4,10 @@ EQUATION("Country_Total_Population")
 /*
 Country's total population
 */
-RESULT(COUNT_ALL("HOUSEHOLD"))
+RESULT(COUNT_ALL("HOUSEHOLDS"))
 
 
-EQUATION("Loans_Distribution_Firms");
+EQUATION("Loans_Distribution_Firms")
 /*
 Distributed effective loans to firms if there is credit rationing
 This variable is very important
@@ -28,7 +28,7 @@ CYCLE(cur, "BANKS")
 	v[13]=VS(cur, "Bank_Market_Share");
 	v[14]=v[13]*v[12];
 	v[10]=0;
-	CYCLES(root, cur1, "SECTORS")
+	CYCLES(ROOT, cur1, "SECTORS")
 	{
 		v[3]=SUMS(cur1, "Firm_Demand_Loans");			//sector demand of loans
 		if(v[0]!=0)
@@ -41,11 +41,11 @@ CYCLE(cur, "BANKS")
 				
 			v[9]=0;
 			if(v[11]==1)
-				SORTS(root, "FIRMS", "Firm_Avg_Debt_Rate", "UP");
+				SORTS(ROOT, "FIRMS", "Firm_Avg_Debt_Rate", "UP");
 			if(v[11]==2)
-				SORTS(root, "FIRMS", "firm_date_birth", "UP");
+				SORTS(ROOT, "FIRMS", "firm_date_birth", "UP");
 			if(v[11]==3)
-				SORTS(root, "FIRMS", "firm_date_birth", "DOWN");
+				SORTS(ROOT, "FIRMS", "firm_date_birth", "DOWN");
 			CYCLES(cur1, cur2, "FIRMS")
 			{
 				v[6]=VS(cur2, "firm_bank");
@@ -593,117 +593,129 @@ Aggregated average household debt rate, weighted by the nominal disposable incom
 RESULT(v[2])
 
 
-EQUATION("Country_Gini_Income") // Gini based on Household Nominal Disposable Income (Approx using Deciles)
-    v[0] = SUM("Household_Nominal_Disposable_Income"); // Total Income
-    v[100] = COUNT("HOUSEHOLD"); // Population Size N
+EQUATION("Country_Gini_Income")
+// Gini based on Household Nominal Disposable Income (Approx using Deciles)
 
-    // Handle edge cases
-    if (v[0] <= 0 || v[100] < 2) {
-        RESULT(0)
-    } else {
-        // Find income thresholds at decile boundaries
-        v[1] = PERC("Household_Nominal_Disposable_Income", 0.1); // Value at 10th percentile
-        v[2] = PERC("Household_Nominal_Disposable_Income", 0.2); // Value at 20th percentile
-        v[3] = PERC("Household_Nominal_Disposable_Income", 0.3);
-        v[4] = PERC("Household_Nominal_Disposable_Income", 0.4);
-        v[5] = PERC("Household_Nominal_Disposable_Income", 0.5);
-        v[6] = PERC("Household_Nominal_Disposable_Income", 0.6);
-        v[7] = PERC("Household_Nominal_Disposable_Income", 0.7);
-        v[8] = PERC("Household_Nominal_Disposable_Income", 0.8);
-        v[9] = PERC("Household_Nominal_Disposable_Income", 0.9); // Value at 90th percentile
+	v[0] = SUM("Household_Nominal_Disposable_Income");	// Total Income
+	v[1] = COUNT("HOUSEHOLDS"); 						// Population Size N
 
-        // Find cumulative sum of income up to each threshold
-        v[11] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[1]); // Sum for bottom 10% (approx)
-        v[12] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[2]); // Sum for bottom 20% (approx)
-        v[13] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[3]); // Sum for bottom 30%
-        v[14] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[4]); // Sum for bottom 40%
-        v[15] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[5]); // Sum for bottom 50%
-        v[16] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[6]); // Sum for bottom 60%
-        v[17] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[7]); // Sum for bottom 70%
-        v[18] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[8]); // Sum for bottom 80%
-        v[19] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[9]); // Sum for bottom 90% (approx)
+	// Handle edge cases
+	if (v[0] <= 0 || v[1] < 2)					 		// If no income or only one household
+		v[40] = 0;
+	else
+		{
+		// Find income thresholds at decile boundaries
+		v[2] = PERC("Household_Nominal_Disposable_Income", 0.1);
+		v[3] = PERC("Household_Nominal_Disposable_Income", 0.2);
+		v[4] = PERC("Household_Nominal_Disposable_Income", 0.3);
+		v[5] = PERC("Household_Nominal_Disposable_Income", 0.4);
+		v[6] = PERC("Household_Nominal_Disposable_Income", 0.5);
+		v[7] = PERC("Household_Nominal_Disposable_Income", 0.6);
+		v[8] = PERC("Household_Nominal_Disposable_Income", 0.7);
+		v[9] = PERC("Household_Nominal_Disposable_Income", 0.8);
+		v[10] = PERC("Household_Nominal_Disposable_Income", 0.9);
 
-        // Calculate cumulative income shares (Lorenz curve points)
-        v[21] = v[11] / v[0]; // Cumulative share at 10% pop (approx)
-        v[22] = v[12] / v[0]; // Cumulative share at 20% pop (approx)
-        v[23] = v[13] / v[0];
-        v[24] = v[14] / v[0];
-        v[25] = v[15] / v[0];
-        v[26] = v[16] / v[0];
-        v[27] = v[17] / v[0];
-        v[28] = v[18] / v[0];
-        v[29] = v[19] / v[0]; // Cumulative share at 90% pop (approx)
+		// Find cumulative sum of income up to each threshold
+		v[11] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[2]);
+		v[12] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[3]);
+		v[13] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[4]);
+		v[14] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[5]);
+		v[15] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[6]);
+		v[16] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[7]);
+		v[17] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[8]);
+		v[18] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[9]);
+		v[19] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<=", v[10]);
 
-        // Approximate Area under Lorenz Curve using Trapezoidal rule (simplified for equal bases)
-        v[30] = 0.1 * (0 + v[21] + v[22] + v[23] + v[24] + v[25] + v[26] + v[27] + v[28] + v[29] + 0.5*1.0);
+		// Calculate cumulative income shares (Lorenz curve points)
+		v[20] = v[11] / v[0];
+		v[21] = v[12] / v[0];
+		v[22] = v[13] / v[0];
+		v[23] = v[14] / v[0];
+		v[24] = v[15] / v[0];
+		v[25] = v[16] / v[0];
+		v[26] = v[17] / v[0];
+		v[27] = v[18] / v[0];
+		v[28] = v[19] / v[0];
 
-        // Gini = 1 - 2 * Area_under_Lorenz_curve
-        v[40] = 1.0 - 2.0 * v[30];
+		// Approximate Area under Lorenz Curve using Trapezoidal rule (simplified for equal bases)
+		v[29] = 0.1 * (0 + v[20] + v[21] + v[22] + v[23] + v[24] + v[25] + v[26] + v[27] + v[28] + 0.5 * 1.0);
 
-        // Ensure Gini is between 0 and 1
-        v[41] = max(0.0, min(1.0, v[40]));
-        RESULT(v[41])
-    }
+		// Gini = 1 - 2 * Area_under_Lorenz_curve
+		v[39] = 1.0 - 2.0 * v[29];
 
-EQUATION("Country_Gini_Wealth") // Gini based on Household Deposits (Approx using Deciles)
-    v[0] = SUM("Household_Stock_Deposits"); // Total Wealth
-    v[100] = COUNT("HOUSEHOLD"); // Population Size N
+		// Ensure Gini is between 0 and 1
+		v[40] = max(0.0, min(1.0, v[39]));
+		}
 
-    // Handle edge cases
-    if (v[0] <= 0 || v[100] < 2) {
-        RESULT(0)
-    } else {
-        // Find wealth thresholds at decile boundaries
-        v[1] = PERC("Household_Stock_Deposits", 0.1);
-        v[2] = PERC("Household_Stock_Deposits", 0.2);
-        v[3] = PERC("Household_Stock_Deposits", 0.3);
-        v[4] = PERC("Household_Stock_Deposits", 0.4);
-        v[5] = PERC("Household_Stock_Deposits", 0.5);
-        v[6] = PERC("Household_Stock_Deposits", 0.6);
-        v[7] = PERC("Household_Stock_Deposits", 0.7);
-        v[8] = PERC("Household_Stock_Deposits", 0.8);
-        v[9] = PERC("Household_Stock_Deposits", 0.9);
+RESULT(v[40])
 
-        // Find cumulative sum of wealth up to each threshold
-        v[11] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[1]);
-        v[12] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[2]);
-        v[13] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[3]);
-        v[14] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[4]);
-        v[15] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[5]);
-        v[16] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[6]);
-        v[17] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[7]);
-        v[18] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[8]);
-        v[19] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[9]);
 
-        // Calculate cumulative wealth shares (Lorenz curve points)
-        v[21] = v[11] / v[0];
-        v[22] = v[12] / v[0];
-        v[23] = v[13] / v[0];
-        v[24] = v[14] / v[0];
-        v[25] = v[15] / v[0];
-        v[26] = v[16] / v[0];
-        v[27] = v[17] / v[0];
-        v[28] = v[18] / v[0];
-        v[29] = v[19] / v[0];
+EQUATION("Country_Gini_Wealth")
+// Gini based on Household Deposits (Approx using Deciles)
 
-        // Approximate Area under Lorenz Curve using Trapezoidal rule
-        v[30] = 0.1 * (0 + v[21] + v[22] + v[23] + v[24] + v[25] + v[26] + v[27] + v[28] + v[29] + 0.5*1.0);
+	v[0] = SUM("Household_Stock_Deposits"); 		// Total Wealth
+	v[1] = COUNT("HOUSEHOLDS"); 					// Population Size N
 
-        // Gini = 1 - 2 * Area_under_Lorenz_curve
-        v[40] = 1.0 - 2.0 * v[30];
+	// Handle edge cases
+	if (v[0] <= 0 || v[1] < 2)						// If no wealth or only one household
+		v[40] = 0;
+	else
+		{
+		// Find wealth thresholds at decile boundaries
+		v[2] = PERC("Household_Stock_Deposits", 0.1);
+		v[3] = PERC("Household_Stock_Deposits", 0.2);
+		v[4] = PERC("Household_Stock_Deposits", 0.3);
+		v[5] = PERC("Household_Stock_Deposits", 0.4);
+		v[6] = PERC("Household_Stock_Deposits", 0.5);
+		v[7] = PERC("Household_Stock_Deposits", 0.6);
+		v[8] = PERC("Household_Stock_Deposits", 0.7);
+		v[9] = PERC("Household_Stock_Deposits", 0.8);
+		v[10] = PERC("Household_Stock_Deposits", 0.9);
 
-        // Ensure Gini is between 0 and 1
-        v[41] = max(0.0, min(1.0, v[40]));
-        RESULT(v[41])
-    }
+		// Find cumulative sum of wealth up to each threshold
+		v[11] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[2]);
+		v[12] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[3]);
+		v[13] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[4]);
+		v[14] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[5]);
+		v[15] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[6]);
+		v[16] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[7]);
+		v[17] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[8]);
+		v[18] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[9]);
+		v[19] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<=", v[10]);
+
+		// Calculate cumulative wealth shares (Lorenz curve points)
+		v[20] = v[11] / v[0];
+		v[21] = v[12] / v[0];
+		v[22] = v[13] / v[0];
+		v[23] = v[14] / v[0];
+		v[24] = v[15] / v[0];
+		v[25] = v[16] / v[0];
+		v[26] = v[17] / v[0];
+		v[27] = v[18] / v[0];
+		v[28] = v[19] / v[0];
+
+		// Approximate Area under Lorenz Curve using Trapezoidal rule (simplified for equal bases)
+		v[29] = 0.1 * (0 + v[20] + v[21] + v[22] + v[23] + v[24] + v[25] + v[26] + v[27] + v[28] + 0.5 * 1.0);
+
+		// Gini = 1 - 2 * Area_under_Lorenz_curve
+		v[39] = 1.0 - 2.0 * v[29];
+
+		// Ensure Gini is between 0 and 1
+		v[40] = max(0.0, min(1.0, v[39]));
+		}
+
+RESULT(v[40])
+
 
 EQUATION("Country_Median_Household_Income")
 // Calculates the median household income once per time step to be used by all households.
-RESULT(MEDS("Household_Avg_Nominal_Income"))
+RESULT(MED("Household_Avg_Nominal_Income"))EQUATION("Country_Median_Household_Income")
+// Calculates the median household income once per time step to be used by all households.
+RESULT(MED("Household_Avg_Nominal_Income"))
 	
 EQUATION("Country_Unemployed_Count")
 // Calculates the total number of unemployed households once per time step.
-RESULT(COUNT_CNDS("HOUSEHOLD", "Household_Employment_Status", "==", 0))
+RESULT(COUNT_CNDS(country, "HOUSEHOLDS", "Household_Employment_Status", "==", 0))
 
 /*******************************************************************************
  Global Household Financial Aggregates (for Bank Calculations)
@@ -737,12 +749,4 @@ RESULT(SUM("Household_Interest_Payment"))
 EQUATION("Country_Total_Household_Debt_Payment")
 /* Sum of loan principal repayments made by all households */
 RESULT(SUM("Household_Debt_Payment"))
-
-
-
-
-
-
-
-
 

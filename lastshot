@@ -1,4 +1,0 @@
-#!/bin/bash
-# Default to 1 screenshot if no parameter given
-COUNT=${1:-1}
-find "C:/Users/eptsa/OneDrive/Imagens/Screenshots" \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -printf "%T@ %p\n" 2>/dev/null | sort -nr | head -n"$COUNT" | cut -d' ' -f2-

@@ -379,3 +379,4 @@ Sim_5
 --Simples Government (Only Wages)
 --Fixed Exchange Rate
 --No Credit Rationing
+

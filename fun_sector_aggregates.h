@@ -326,3 +326,4 @@ EQUATION("Sector_Idle_Capacity")
 RESULT(1-V("Sector_Capacity_Utilization"))
 
 
+

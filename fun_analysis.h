@@ -409,27 +409,32 @@ RESULT(VS(external, "Country_Exchange_Rate"))
 // Removed Gini calculations, moved to fun_macro.h
 
 EQUATION("Household_Income_Share_Top10") // Share of total income held by top 10% households
-v[1] = SUM("Household_Nominal_Disposable_Income");
-v[2] = SUM_CND_PERC("Household_Nominal_Disposable_Income", "HOUSEHOLD", "Household_Nominal_Disposable_Income", ">=", 90);
-v[3] = v[1] > 0 ? v[2] / v[1] : 0;
-RESULT(v[3])
+    v[1] = SUM("Household_Nominal_Disposable_Income");
+    v[2] = PERC("Household_Nominal_Disposable_Income", 0.9); // 90th percentile
+    v[3] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", ">=", v[2]);
+    v[4] = v[1] > 0 ? v[3] / v[1] : 0;
+RESULT(v[4])
 
 EQUATION("Household_Income_Share_Bot50") // Share of total income held by bottom 50% households
-v[1] = SUM("Household_Nominal_Disposable_Income");
-v[2] = SUM_CND_PERC("Household_Nominal_Disposable_Income", "HOUSEHOLD", "Household_Nominal_Disposable_Income", "<", 50);
-v[3] = v[1] > 0 ? v[2] / v[1] : 0;
-RESULT(v[3])
+    v[1] = SUM("Household_Nominal_Disposable_Income");
+    v[2] = PERC("Household_Nominal_Disposable_Income", 0.5); // 50th percentile
+    v[3] = SUM_CND("Household_Nominal_Disposable_Income", "Household_Nominal_Disposable_Income", "<", v[2]);
+    v[4] = v[1] > 0 ? v[3] / v[1] : 0;
+RESULT(v[4])
 
 EQUATION("Household_Wealth_Share_Top10") // Share of total wealth (deposits) held by top 10% households
-v[1] = SUM("Household_Stock_Deposits");
-v[2] = SUM_CND_PERC("Household_Stock_Deposits", "HOUSEHOLD", "Household_Stock_Deposits", ">=", 90);
-v[3] = v[1] > 0 ? v[2] / v[1] : 0;
-RESULT(v[3])
+    v[1] = SUM("Household_Stock_Deposits");
+    v[2] = PERC("Household_Stock_Deposits", 0.9); // 90th percentile
+    v[3] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", ">=", v[2]);
+    v[4] = v[1] > 0 ? v[3] / v[1] : 0;
+RESULT(v[4])
 
 EQUATION("Household_Wealth_Share_Bot50") // Share of total wealth (deposits) held by bottom 50% households
-v[1] = SUM("Household_Stock_Deposits");
-v[2] = SUM_CND_PERC("Household_Stock_Deposits", "HOUSEHOLD", "Household_Stock_Deposits", "<", 50);
-v[3] = v[1] > 0 ? v[2] / v[1] : 0;
-RESULT(v[3])
+    v[1] = SUM("Household_Stock_Deposits");
+    v[2] = PERC("Household_Stock_Deposits", 0.5); // 50th percentile
+    v[3] = SUM_CND("Household_Stock_Deposits", "Household_Stock_Deposits", "<", v[2]);
+    v[4] = v[1] > 0 ? v[3] / v[1] : 0;
+RESULT(v[4])
+
 
 

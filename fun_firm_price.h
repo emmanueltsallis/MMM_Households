@@ -158,3 +158,4 @@ Effective Markup is the Effective Price over the Variable Cost
 	v[2]= v[1]!=0? v[0]/v[1] : 0;
 RESULT(v[2])
 
+

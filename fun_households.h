@@ -631,7 +631,7 @@ RESULT(v[1])
 
 EQUATION("Household_Wage_Income")
 /*
-Calculates household wage income as sector wage × persistent household skill.
+Calculates household wage income as sector wage � persistent household skill.
 Heterogeneity comes from the persistent skill assigned at initialization.
 Wage is updated only annually (wage stickiness).
 */
@@ -815,10 +815,10 @@ v[0] = V("annual_frequency");
 if (fmod((double) t, v[0]) == 0 && t > 0)
 {
   // Sort all sibling households under the parent object by their average nominal income
-  SORTS(PARENT, "HOUSEHOLD", "Household_Avg_Nominal_Income", UP);
+  SORTS(PARENT, "HOUSEHOLDS", "Household_Avg_Nominal_Income", UP);
 
   // Get the total number of households for the percentile calculation
-  v[1] = COUNT("HOUSEHOLD");
+  v[1] = COUNT("HOUSEHOLDS");
 
   if (v[1] > 0)
   {
@@ -892,7 +892,7 @@ Only households with negative net wealth are included. Others get zero.
     v[0] = V("Household_Net_Wealth");
     if (v[0] < 0) {                     // Only households with negative net wealth are included. Others get zero.
         v[1] = abs(SUM_CND(PARENT, "Household_Net_Wealth", "<", 0)); // Take absolute value of the sum
-        v[2] = (v[1] != 0) ? abs(v[0]) / v[1] : 0;  // Calculate share (positive ÷ positive = positive)
+        v[2] = (v[1] != 0) ? abs(v[0]) / v[1] : 0;  // Calculate share (positive � positive = positive)
     } else {
         v[2] = 0;                        // Others get zero.
     }

@@ -4,7 +4,7 @@ Bank Credit Demand and Supply
 *********************************************************************/
 
 
-EQUATION("Bank_Max_Total_Loans");
+EQUATION("Bank_Max_Total_Loans")
 /*
 Maximum stock of loans. Follows basileia or similar rule
 Might impact effective loans
@@ -30,7 +30,7 @@ Total demand for loans, firms and households
 	v[10]=V("bank_id");
 
 	v[0]=0;
-	CYCLES(root, cur, "SECTORS")
+	CYCLES(ROOT, cur, "SECTORS")
 	{
 		v[1]=0;
 		CYCLES(cur, cur1, "FIRMS")
@@ -205,7 +205,7 @@ Total Stock of short term loans, firms and households portion
 	v[10]=V("bank_id");
 
 	v[0]=0;
-	CYCLES(root, cur, "SECTORS")
+	CYCLES(ROOT, cur, "SECTORS")
 	{
 		v[1]=0;
 		CYCLES(cur, cur1, "FIRMS")
@@ -238,7 +238,7 @@ Total Stock of long term loans, firms and households portion
 	v[10]=V("bank_id");
 
 	v[0]=0;
-	CYCLES(root, cur, "SECTORS")
+	CYCLES(ROOT, cur, "SECTORS")
 	{
 		v[1]=0;
 		CYCLES(cur, cur1, "FIRMS")
@@ -273,7 +273,7 @@ Total Stock of deposits, firms and households portion
 	v[10]=V("bank_id");
 
 	v[0]=0;
-	CYCLES(root, cur, "SECTORS")
+	CYCLES(ROOT, cur, "SECTORS")
 	{
 		v[1]=0;
 		CYCLES(cur, cur1, "FIRMS")
@@ -304,7 +304,7 @@ Bank Interest Payment (paid out on deposits) to firms and households portion
 v[10]=V("bank_id");
 
 	v[0]=0;
-	CYCLES(root, cur, "SECTORS")
+	CYCLES(ROOT, cur, "SECTORS")
 	{
 		v[1]=0;
 		CYCLES(cur, cur1, "FIRMS")
@@ -335,7 +335,7 @@ Total interest payment received from firms and households portion
 	v[10]=V("bank_id");
 
 	v[0]=0;
-	CYCLES(root, cur, "SECTORS")
+	CYCLES(ROOT, cur, "SECTORS")
 	{
 		v[1]=0;
 		CYCLES(cur, cur1, "FIRMS")
@@ -366,7 +366,7 @@ Total debt principal payment received from firms and households portion
 	v[10]=V("bank_id");
 
 	v[0]=0;
-	CYCLES(root, cur, "SECTORS")
+	CYCLES(ROOT, cur, "SECTORS")
 	{
 		v[1]=0;
 		CYCLES(cur, cur1, "FIRMS")
@@ -395,7 +395,7 @@ Bank Profits
 *********************************************************************/
 
 
-EQUATION("Bank_Defaulted_Loans");
+EQUATION("Bank_Defaulted_Loans")
 /*
 Current bank defaulted loans 
 */
@@ -404,7 +404,7 @@ Current bank defaulted loans
 RESULT(v[0])
 
 
-EQUATION("Bank_Accumulated_Defaulted_Loans");
+EQUATION("Bank_Accumulated_Defaulted_Loans")
 /*
 Current bank defaulted loans 
 */
@@ -501,7 +501,7 @@ Bank Analysis
 *********************************************************************/
 
 
-EQUATION("Bank_Short_Term_Rate");
+EQUATION("Bank_Short_Term_Rate")
 /*
 Share of short term loans over total loans
 */
@@ -521,7 +521,7 @@ Total Stock of loans over total stock of deposits
 RESULT(v[2])
 
 
-EQUATION("Bank_Default_Share");
+EQUATION("Bank_Default_Share")
 /*
 Current bank defaulted loans over stock of long term loans
 */
@@ -531,7 +531,7 @@ Current bank defaulted loans over stock of long term loans
 RESULT(min(1,v[2]))
 
 
-EQUATION("Bank_Effective_Capital_Ratio");
+EQUATION("Bank_Effective_Capital_Ratio")
 /*
 Current bank accumulated profits over stock of loans
 */
@@ -541,7 +541,7 @@ Current bank accumulated profits over stock of loans
 RESULT(v[2])
 
 
-EQUATION("Bank_Effective_Profit_Rate");
+EQUATION("Bank_Effective_Profit_Rate")
 /*
 Effective profit rate on total loans
 */
@@ -549,6 +549,7 @@ Effective profit rate on total loans
 	v[1]=V("Bank_Total_Stock_Loans");
 	v[2]= v[1]!=0? v[0]/v[1] : 0;
 RESULT(v[2])
+
 
 
 

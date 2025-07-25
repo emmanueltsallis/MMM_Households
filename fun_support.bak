@@ -70,20 +70,3 @@ double LAG_GROWTH( object *obj , const char *var , int lag = 0, int lag2 = 0)
 	return r;
 }
 
-
-/*
-pareto_tsallis(mu, alpha, q)
-This MACRO returns a random draw from a Pareto-Tsallis distribution.
-- "mu" is the scale parameter (must be positive).
-- "alpha" is the shape parameter (must be positive).
-- "q" is the Tsallis deformation parameter.
-- The function uses a uniform random draw to generate a Pareto-Tsallis distributed value.
-*/
-double pareto_tsallis(double mu, double alpha, double q)
-{
-    double U = RND; // Draw a uniform random variable U ~ U(0,1)
-    double X = mu * pow(1 - (1 - q) * U, -1.0 / (alpha * (1 - q))); // Pareto-Tsallis transformation
-
-    return X; // Return the generated value
-}
-

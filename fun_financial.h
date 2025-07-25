@@ -152,7 +152,7 @@ RESULT(SUM("Bank_Defaulted_Loans"))
 EQUATION("Financial_Sector_Stock_Deposits")
 RESULT(SUM("Bank_Stock_Deposits"))
 
-EQUATION("Financial_Sector_Max_Total_Loans");
+EQUATION("Financial_Sector_Max_Total_Loans")
 RESULT(SUM("Bank_Max_Total_Loans"))
 
 EQUATION("Financial_Sector_Demand_Loans")
@@ -194,7 +194,7 @@ Financial Sector Analysis
 *******************************************************************************/
 
 
-EQUATION("Financial_Sector_Short_Term_Rate");
+EQUATION("Financial_Sector_Short_Term_Rate")
 /*
 Share of short term loans over total loans
 Analysis Variable
@@ -290,6 +290,7 @@ Total credit growth
 	v[1]=VL("Financial_Sector_Total_Stock_Loans", 1);
 	v[2]=v[1]!=0? (v[0]-v[1])/v[1] : 0;
 RESULT(v[2])
+
 
 
 

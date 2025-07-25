@@ -53,6 +53,12 @@ RESULT(VS(country,"Country_Avg_Profit_Rate"))
 EQUATION("PCU")//Productive Capacity Utilization Rate
 RESULT(VS(country,"Country_Capacity_Utilization"))
 
+EQUATION("PROFITS")//Total Profits
+RESULT(VS(country, "Country_Total_Profits"))
+
+EQUATION("WAGE")//Total Wages
+RESULT(VS(country, "Country_Total_Wages"))
+
 EQUATION("PSH")//Profit Share
 RESULT(VS(country,"Country_Profit_Share"))
 
@@ -70,9 +76,11 @@ RESULT(VS(country, "Country_Real_GDP_Demand"))
 
 EQUATION("C_r")//Quarterly Real Consumption
 RESULT(VS(country, "Country_Total_Classes_Expenses")/V("P"))
+//RESULT(VS(country, "Country_Nominal_Consumption_Production")/V("P"))
 
 EQUATION("I_r")//Quarterly Real Investment
 RESULT(VS(country, "Country_Total_Investment_Expenses")/V("P"))
+//RESULT(VS(country, "Country_Nominal_Capital_Production")/V("P"))
 
 EQUATION("INVE_r")//Real Aggregate Inventories
 RESULT(VS(country, "Country_Inventories")/V("P"))
@@ -83,10 +91,10 @@ RESULT(VS(country, "Country_Capital_Stock")/V("P"))
 EQUATION("G_r")//Quarterly Real Government Expenses
 RESULT(VS(government, "Government_Effective_Expenses")/V("P"))
 
-EQUATION("PROFITS")//Real Profits
+EQUATION("PROF_r")//Real Profits
 RESULT(VS(country, "Country_Total_Profits")/V("P"))
 
-EQUATION("WAGE")//Real Wages
+EQUATION("WAGE_r")//Real Wages
 RESULT(VS(country, "Country_Total_Wages")/V("P"))
 
 EQUATION("M_r")//Quarterly Real Imports
@@ -424,4 +432,33 @@ RESULT(VS(external, "Country_External_Debt_GDP_Ratio"))
 
 EQUATION("ER")//Exchange Rate
 RESULT(VS(external, "Country_Exchange_Rate"))
+
+
+/***** HOUSEHOLD STATS *****/
+
+// Removed Gini calculations, moved to fun_macro.h
+
+EQUATION("Household_Income_Share_Top10") // Share of total income held by top 10% households
+    v[1] = SUM("Household_Nominal_Disposable_Income");
+    v[2] = SUM_CND_PERC("Household_Nominal_Disposable_Income", "HOUSEHOLDS", "Household_Nominal_Disposable_Income", ">=", 90);
+    v[3] = v[1] > 0 ? v[2] / v[1] : 0;
+RESULT(v[3])
+
+EQUATION("Household_Income_Share_Bot50") // Share of total income held by bottom 50% households
+    v[1] = SUM("Household_Nominal_Disposable_Income");
+    v[2] = SUM_CND_PERC("Household_Nominal_Disposable_Income", "HOUSEHOLDS", "Household_Nominal_Disposable_Income", "<", 50);
+    v[3] = v[1] > 0 ? v[2] / v[1] : 0;
+RESULT(v[3])
+
+EQUATION("Household_Wealth_Share_Top10") // Share of total wealth (deposits) held by top 10% households
+    v[1] = SUM("Household_Stock_Deposits");
+    v[2] = SUM_CND_PERC("Household_Stock_Deposits", "HOUSEHOLDS", "Household_Stock_Deposits", ">=", 90);
+    v[3] = v[1] > 0 ? v[2] / v[1] : 0;
+RESULT(v[3])
+
+EQUATION("Household_Wealth_Share_Bot50") // Share of total wealth (deposits) held by bottom 50% households
+    v[1] = SUM("Household_Stock_Deposits");
+    v[2] = SUM_CND_PERC("Household_Stock_Deposits", "HOUSEHOLDS", "Household_Stock_Deposits", "<", 50);
+    v[3] = v[1] > 0 ? v[2] / v[1] : 0;
+RESULT(v[3])
 
