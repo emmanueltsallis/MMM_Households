@@ -225,8 +225,6 @@ Household disaggregation parameters:
 -"household_avg_liquidity_preference_adjustment"					:defines the global baseline for household liquidity preference adjustment
 -"household_avg_debt_rate_adjustment"								:defines the global baseline for household debt rate adjustment
 -"household_avg_propensity_to_spend"								:defines the average propensity to spend for approximation
--"household_initial_max_debt_rate"									:defines the initial maximum debt rate for households
--"household_initial_liquidity_preference"							:defines the initial liquidity preference for households
 -"household_propensity_steepness"									:defines the steepness of the sigmoid propensity function
 -"household_propensity_center"										:defines the center of the sigmoid propensity function
 -"household_propensity_min"											:defines the minimum value of the sigmoid propensity function

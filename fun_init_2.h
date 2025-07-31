@@ -147,8 +147,6 @@ v[151]=(v[141]*v[101]+v[142]*v[102]+v[143]*v[100])/(v[141]+v[142]+v[143]);  // I
 
 v[152]=V("initial_firm_desired_debt_rate");			// Initial firm desired debt rate
 v[153]=V("initial_firm_liquidity_preference");		// Initial firm liquidity preference
-v[155]=V("household_initial_max_debt_rate");		// Initial household max debt rate
-v[156]=V("household_initial_liquidity_preference");	// Initial household liquidity preference
 
 v[157]=V("scale_prod_cap"); // Scale production capacity
 v[158]=V("scale_bank_pro"); // Scale bank profits
@@ -204,14 +202,13 @@ CYCLE(cur, "HOUSEHOLDS") // Cycle through all households
     v[173] = 0.05 + 1.15 / (1 + v[172] * v[172]);  // Base propensity: ranges from ~1.2 (poor) to ~0.05 (rich)
     
     // Add individual heterogeneity around income-based baseline
-    v[174] = v[173] * norm(1.0, 0.15);  // ±15% individual variation around income-based baseline
+    v[174] = v[173] * norm(1.0, 0.15);  // ï¿½15% individual variation around income-based baseline
     
     // Apply final bounds: minimum 0.05, maximum 1.3 (allows rare cases >1)
     v[175] = max(0.05, min(1.3, v[174]));
 
     // Initialize household lagged variables and stocks
     // Use v[101] = consumption sector price, Country_Total_Population = number of households, v[6]=total autonomous consumption scale
-    // Use v[155]=initial max debt rate, v[156]=initial liquidity preference
 	for (i=1; i<=V("annual_frequency"); i++)		// Loop for each period in a year
 		{
 		WRITELLS(cur, "Household_Nominal_Disposable_Income", v[167], 0, i);    		// Set initial nominal income for each lag
@@ -220,8 +217,8 @@ CYCLE(cur, "HOUSEHOLDS") // Cycle through all households
     WRITELLS(cur, "Household_Avg_Nominal_Income", v[167], 0, 1);
     WRITELLS(cur, "Household_Avg_Real_Income", (v[167]/v[101]), 0, 1);
     WRITELLS(cur, "Household_Real_Autonomous_Consumption", v[6]/VS(country, "Country_Total_Population"), 0, 1); // Distribute total autonomous consumption evenly
-    WRITELLS(cur, "Household_Liquidity_Preference", v[156], 0, 1); // Use global initial value
-    WRITELLS(cur, "Household_Max_Debt_Rate", v[155], 0, 1);      // Use global initial value
+    WRITELLS(cur, "Household_Liquidity_Preference", 0, 0, 1); 	// 0 initial liquidity preference
+    WRITELLS(cur, "Household_Max_Debt_Rate", 0, 0, 1);      	// 0 initial max debt rate
     WRITELLS(cur, "Household_Debt_Rate", 0, 0, 1);              // 0, no debt initially
     WRITELLS(cur, "Household_Stock_Deposits", 0, 0, 1);         // 0 initial deposits
     WRITELLS(cur, "Household_Stock_Loans", 0, 0, 1);            // 0 initial loans
