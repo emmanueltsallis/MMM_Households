@@ -83,7 +83,7 @@ Uses a sigmoid function: y = (1-n)(1/(1+exp(k*(x-x0)))) + n
 where:
 - x = household_income / median_income (relative income ratio)
 - k = household_propensity_steepness (controls how quickly propensity changes with income)
-- x0 = household_propensity_center (income level where propensity = 0.5)
+- x0 = household_propensity_midpoint (income level where propensity = 0.5)
 - n = household_propensity_min (minimum propensity, creates range from n to 1)
 
 The function creates a "Keeping up with the Joneses" effect portraying an unequal economy:
@@ -96,7 +96,7 @@ households compare their consumption to the median household. (Duesenberry, 1949
 
     // Flexible sigmoid function parameters
     v[3] = V("household_propensity_steepness");  // Steepness parameter (k): controls how quickly propensity changes (calibrated to 2.0)
-    v[4] = V("household_propensity_center");     // Center point (x0): income level where propensity = 0.5 (calibrated to 2.0)
+    v[4] = V("household_propensity_midpoint");     // Center point (x0): income level where propensity = 0.5 (calibrated to 2.0)
     v[5] = V("household_propensity_min");        // Minimum bound (n): calibrated to 0.05
 
     // Truncated Sigmoid function: y = (1 - n) * (1 / (1 + exp(k * (x - x0)))) + n
@@ -595,35 +595,55 @@ RESULT(v[3])  // Return the household's deposit earnings
 
 EQUATION("Household_Employment_Status")
 /*
-Determines household employment status based on labor market matching.
-0 = unemployed, 1 = employed in consumption sector, 2 = employed in capital sector, 3 = employed in input sector
+Markov matrix process for employment/unemployment status with persistency.
+
+    From\To    Unemployed  Cons_Sector  Cap_Sector  Input_Sector
+    Unemployed    1-v[7]     v[7]*p1      v[7]*p2     v[7]*p3
+    Cons_Sector   1-v[7]       v[7]         0           0
+    Cap_Sector    1-v[7]        0          v[7]         0
+    Input_Sector  1-v[7]        0           0          v[7]
+
+V[1] = 0: unemployed
+V[1] = 1: employed in consumption sector
+V[1] = 2: employed in capital sector
+V[1] = 3: employed in input sector
 */
 
-    v[1] = 0;  // Initialize as unemployed
+v[0] = CURRENT; // Last period's employment status (0=unemployed, 1,2,3 = sectors)
+v[2] = VS(consumption, "Sector_Employment");
+v[3] = VS(capital, "Sector_Employment");
+v[4] = VS(input, "Sector_Employment");
+v[5] = v[2] + v[3] + v[4]; // Total employment demand
+v[6] = VS(country, "Country_Total_Population");
+v[7] = v[5] / v[6]; // Employment rate
 
-    // Get total employment demand from all sectors
-    v[2] = VS(consumption, "Sector_Employment");
-    v[3] = VS(capital, "Sector_Employment");
-    v[4] = VS(input, "Sector_Employment");
-    v[5] = v[2] + v[3] + v[4];  // Total employment demand
-
-    v[6] = VS(country, "Country_Total_Population");
-
-    v[7] = v[5] / v[6];  // Employment rate (jobs per household)
-        if(RND < v[7])  // Stochastic employment assignment
-        {
-            // Assign to sector based on relative employment
-            v[9] = RND;
-            v[10] = v[2] / v[5];  // Consumption sector share
-            v[11] = v[3] / v[5];  // Capital sector share
-            
-            if(v[9] < v[10])
-                v[1] = 1;  // Employed in consumption's sector
-            else if(v[9] < v[10] + v[11])
-                v[1] = 2;  // Employed in capital's sector
-            else
-                v[1] = 3;  // Employed in input's sector
-        }
+if (v[0] == 0) // Unemployed last period
+{
+    // Pro-cyclical hiring: Higher employment rate → easier to find jobs
+    if (RND < v[7]) {
+        // Assign sector based on relative demand
+        v[9] = RND;
+        v[10] = v[2] / v[5];
+        v[11] = v[3] / v[5];
+        if (v[9] < v[10])
+            v[1] = 1;
+        else if (v[9] < v[10] + v[11])
+            v[1] = 2;
+        else
+            v[1] = 3;
+    } else {
+        v[1] = 0; // Remain unemployed
+    }
+}
+else // Employed last period
+{
+    // Counter-cyclical firing: Higher unemployment rate → easier to lose jobs
+    if (RND < (1 - v[7])) {
+        v[1] = 0; // Fired, become unemployed
+    } else {
+        v[1] = v[0]; // Stay employed in same sector
+    }
+}
 
 RESULT(v[1])
 

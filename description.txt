@@ -226,7 +226,7 @@ Household disaggregation parameters:
 -"household_avg_debt_rate_adjustment"								:defines the global baseline for household debt rate adjustment
 -"household_avg_propensity_to_spend"								:defines the average propensity to spend for approximation
 -"household_propensity_steepness"									:defines the steepness of the sigmoid propensity function
--"household_propensity_center"										:defines the center of the sigmoid propensity function
+-"household_propensity_midpoint"										:defines the center of the sigmoid propensity function
 -"household_propensity_min"											:defines the minimum value of the sigmoid propensity function
 -"household_elasticity_base_factor"									:defines the base factor for dynamic elasticity calculation
 -"household_import_propensity"										:defines the household-specific import propensity

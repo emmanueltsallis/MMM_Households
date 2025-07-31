@@ -27,8 +27,6 @@ households=SEARCH("HOUSEHOLDS"); // Household pointer
 v[6]=V("scale_autonomous_consumption"); // Autonomous consumption scale
 
 //Household Parameters
-v[21]=V("household_wage_mean");            // Mean of log-normal wage distribution
-v[22]=V("household_wage_stddev");          // Standard deviation of wage distribution
 v[23]=V("household_profit_lambda");        // Scale parameter for q-exponential distribution
 v[25]=V("household_profit_q");             // Entropic index for q-exponential distribution (0 < q < 2)
 v[250]=V("household_profit_participation_rate"); // Fraction of households receiving profits (e.g., 0.05)
@@ -148,6 +146,7 @@ v[151]=(v[141]*v[101]+v[142]*v[102]+v[143]*v[100])/(v[141]+v[142]+v[143]);  // I
 v[152]=V("initial_firm_desired_debt_rate");			// Initial firm desired debt rate
 v[153]=V("initial_firm_liquidity_preference");		// Initial firm liquidity preference
 
+
 v[157]=V("scale_prod_cap"); // Scale production capacity
 v[158]=V("scale_bank_pro"); // Scale bank profits
 v[159]=V("scale_debt"); // Scale debt
@@ -172,10 +171,8 @@ v[159]=V("scale_debt"); // Scale debt
 		}
 
 
-//Calculate theoretical median income from distribution parameters (for single-pass propensity calculation)
-v[168] = exp(v[21]);  // Theoretical median from log-normal wage distribution
-v[169] = 0;  // Profit income median set to 0 (profits distributed during simulation)
-v[170] = v[168] + v[169];  // Combined theoretical median income (wage only initially)
+//Calculate average sector wage for propensity calculation baseline
+v[169] = (v[50] + v[51] + v[52]) / 3; // Average sector wage (baseline for comparison)
 
 //Begin Writing Household Variables
 CYCLE(cur, "HOUSEHOLDS") // Cycle through all households
@@ -185,27 +182,81 @@ CYCLE(cur, "HOUSEHOLDS") // Cycle through all households
     v[164] = max(0, min(1, v[27] * norm(1.0, 0.20)));  // Household-specific import propensity (normal distribution, ?=0.20)
     v[166] = max(0, min(1, v[31] * norm(1.0, 0.20)));  // Household-specific autonomous consumption adjustment (normal distribution, ?=0.20)
 
-    // Generate initial income based on distributions defined earlier
-    // Parameters read earlier: v[21]=wage_mean, v[22]=wage_stddev
-    v[161] = lnorm(v[21], v[22]);  // Initial wage income for this household
-    v[162] = 0;  // Initial profit income set to 0 (will be calculated during simulation using profit shares)
+    // Assign persistent skill to each household (log-normal distribution)
+    v[100] = lnorm(v[29], v[30]);  // Set household_skill_mean = -0.5 * (household_skill_stddev)^2 to ensure E[household_skill] = 1
+
+    // Determine initial employment status using Markov chain logic
+    // Get total employment demand from all sectors
+    v[180] = VS(consumption, "Sector_Employment");
+    v[181] = VS(capital, "Sector_Employment");
+    v[182] = VS(input, "Sector_Employment");
+    v[183] = v[180] + v[181] + v[182];  // Total employment demand
+    v[184] = VS(country, "Country_Total_Population");
+    v[185] = v[183] / v[184];  // Employment rate
+
+    // Determine initial employment status
+    v[161] = 0;  // Default to unemployed (no wage income)
+    
+    if (RND < v[185])  // Get employed based on employment rate
+    {
+        // Assign to sector based on relative employment demand
+        v[186] = RND;
+        v[187] = v[180] / v[183];  // Consumption sector share
+        v[188] = v[181] / v[183];  // Capital sector share
+        
+		v[189] = v[100];  // Use local variable instead of reading from household object
+
+        if (v[186] < v[187])
+        {
+            // Employed in consumption sector - use actual sector wage
+            v[161] = v[50] * v[189];  // sector_initial_wage * household_skill
+        }
+        else if (v[186] < v[187] + v[188])
+        {
+            // Employed in capital sector - use actual sector wage
+            v[161] = v[51] * v[189];  // sector_initial_wage * household_skill
+        }
+        else
+        {
+            // Employed in input sector - use actual sector wage
+            v[161] = v[52] * v[189];  // sector_initial_wage * household_skill
+        }
+    } // If not employed, v[161] remains 0
+
+	v[162] = 0;  // Initial profit income set to 0 (will be calculated during simulation using profit shares)
+
+    // Initialize employment status based on the employment determination above
+    if (v[161] > 0)  // If household has wage income, it's employed
+    {
+        if (v[186] < v[187])
+            WRITES(cur, "Household_Employment_Status", 1);  // Employed in consumption sector
+        else if (v[186] < v[187] + v[188])
+            WRITES(cur, "Household_Employment_Status", 2);  // Employed in capital sector
+        else
+            WRITES(cur, "Household_Employment_Status", 3);  // Employed in input sector
+    }
+    else
+    {
+        WRITES(cur, "Household_Employment_Status", 0);  // Unemployed
+    }
 
     // Calculate initial disposable income for this household
     v[167] = (v[161] + v[162]) * (1 - v[163]); // Income * (1 - household tax rate)
     
-    // Calculate propensity to spend using single-pass algorithm
+    // Calculate propensity to spend using direct income-based approach
     v[168] = v[161] + v[162]; // Total gross income
-    v[172] = v[168] / v[170];  // Relative income (1.0 = theoretical median household)
+    v[172] = v[168] / v[169];  // Relative to average sector wage
     
-    // Income-inverse propensity relationship with proper bounds
-    // Poor households (v[172] < 1) get higher propensity, rich households (v[172] > 1) get lower
-    v[173] = 0.05 + 1.15 / (1 + v[172] * v[172]);  // Base propensity: ranges from ~1.2 (poor) to ~0.05 (rich)
+    // Get propensity parameters
+    v[190] = V("household_propensity_min");        // Minimum propensity bound
+    v[191] = V("household_propensity_steepness");  // Steepness parameter
+    v[192] = V("household_propensity_midpoint");   // Midpoint parameter
     
-    // Add individual heterogeneity around income-based baseline
-    v[174] = v[173] * norm(1.0, 0.15);  // �15% individual variation around income-based baseline
-    
-    // Apply final bounds: minimum 0.05, maximum 1.3 (allows rare cases >1)
-    v[175] = max(0.05, min(1.3, v[174]));
+    // Income-relative propensity relationship using sigmoid function
+    // Lower income households (v[172] < 1) get higher propensity, higher income households (v[172] > 1) get lower
+    v[173] = 1 / (1 + exp(v[191] * (v[172] - v[192])));  // Base sigmoid function
+    v[174] = (1 - v[190]) * v[173] + v[190];  // Scale and shift: (1-min) * sigmoid + min
+    v[175] = min(1, v[174]);  // Cap maximum at 1
 
     // Initialize household lagged variables and stocks
     // Use v[101] = consumption sector price, Country_Total_Population = number of households, v[6]=total autonomous consumption scale
@@ -217,8 +268,8 @@ CYCLE(cur, "HOUSEHOLDS") // Cycle through all households
     WRITELLS(cur, "Household_Avg_Nominal_Income", v[167], 0, 1);
     WRITELLS(cur, "Household_Avg_Real_Income", (v[167]/v[101]), 0, 1);
     WRITELLS(cur, "Household_Real_Autonomous_Consumption", v[6]/VS(country, "Country_Total_Population"), 0, 1); // Distribute total autonomous consumption evenly
-    WRITELLS(cur, "Household_Liquidity_Preference", 0, 0, 1); 	// 0 initial liquidity preference
-    WRITELLS(cur, "Household_Max_Debt_Rate", 0, 0, 1);      	// 0 initial max debt rate
+    WRITELLS(cur, "Household_Liquidity_Preference", 0, 0, 1); // 0 initial liquidity preference
+    WRITELLS(cur, "Household_Max_Debt_Rate", 0, 0, 1);      // 0 initial max debt rate
     WRITELLS(cur, "Household_Debt_Rate", 0, 0, 1);              // 0, no debt initially
     WRITELLS(cur, "Household_Stock_Deposits", 0, 0, 1);         // 0 initial deposits
     WRITELLS(cur, "Household_Stock_Loans", 0, 0, 1);            // 0 initial loans
@@ -238,8 +289,7 @@ CYCLE(cur, "HOUSEHOLDS") // Cycle through all households
     v[179] = max(0, min(1, v[33] * norm(1.0, 0.4))); // +-40% individual variation around household_avg_debt_rate_adjustment
     WRITES(cur, "household_debt_rate_adjustment", v[179]); // Store persistent debt rate adjustment
 
-    // Assign persistent skill to each household (log-normal distribution)
-    v[100] = lnorm(v[29], v[30]);  // Set household_skill_mean = -0.5 * (household_skill_stddev)^2 to ensure E[household_skill] = 1
+    // Store household skill (already calculated earlier in the loop)
     WRITES(cur, "household_skill", v[100]); // household_skill, persistent
     
     // Initialize profit share coefficient using q-exponential distribution

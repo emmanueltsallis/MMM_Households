@@ -10,6 +10,9 @@ Label Root
 			Son: HOUSEHOLD_LOANS
 			Label HOUSEHOLD_LOANS
 			{
+				Param: household_loan_fixed_amortization
+				Param: household_loan_interest_rate
+				Param: household_loan_total_amount
 
 			}
 
@@ -22,6 +25,61 @@ Label Root
 			Var: Household_Avg_Real_Income
 			Var: Household_Liquidity_Preference
 			Var: Household_Max_Debt_Rate
+			Var: Household_Employment_Status
+			Var: Household_Available_Deposits
+			Var: Household_Avg_Debt_Rate
+			Var: Household_Avg_Interest_Rate
+			Var: Household_Debt_Payment
+			Var: Household_Debt_Share
+			Var: Household_Demand_Loans
+			Var: Household_Deposits_Return
+			Var: Household_Desired_Expenses
+			Var: Household_Effective_Expenses
+			Var: Household_Effective_Loans
+			Var: Household_Effective_Real_Domestic_Consumption
+			Var: Household_Effective_Real_Imported_Consumption
+			Var: Household_Financial_Obligations
+			Var: Household_Funds
+			Var: Household_Imports_Share
+			Var: Household_Income_Share
+			Var: Household_Interest_Payment
+			Var: Household_Interest_Rate
+			Var: Household_Internal_Funds
+			Var: Household_Max_Loans
+			Var: Household_Maximum_Expenses
+			Var: Household_Net_Wealth
+			Var: Household_Nominal_Gross_Income
+			Var: Household_Propensity_to_Spend
+			Var: Household_Real_Autonomous_Consumption
+			Var: Household_Real_Desired_Domestic_Consumption
+			Var: Household_Real_Desired_Imported_Consumption
+			Var: Household_Real_Domestic_Consumption_Demand
+			Var: Household_Real_Imported_Consumption_Demand
+			Var: Household_Retained_Deposits
+			Var: Household_Taxation
+			Var: Household_Wage_Income
+			Var: Household_Profit_Income
+			Var: Household_Wealth_Share
+			Param: household_avg_autonomous_consumption_adjustment
+			Param: household_autonomous_consumption_adjustment
+			Param: household_avg_debt_rate_adjustment
+			Param: household_debt_rate_adjustment
+			Param: household_avg_import_propensity
+			Param: household_import_propensity
+			Param: household_avg_liquidity_preference_adjustment
+			Param: household_liquidity_preference_adjustment
+			Param: household_direct_tax
+			Param: household_elasticity_base_factor
+			Param: household_profit_participation_rate
+			Param: household_profit_lambda
+			Param: household_profit_q
+			Param: household_profit_share
+			Param: household_propensity_min
+			Param: household_propensity_midpoint
+			Param: household_propensity_steepness
+			Param: household_skill
+			Param: household_wage_mean
+			Param: household_wage_stddev
 
 		}
 
@@ -140,9 +198,9 @@ Label Root
 			Param: fs_price_strategy_long_term
 			Param: fs_price_strategy_short_term
 			Param: fs_profit_distribution_rate
-			Param: fs_risk_premium_class
 			Param: fs_risk_premium_long_term
 			Param: fs_risk_premium_short_term
+			Param: fs_risk_premium_household
 			Param: fs_sensitivity_debt_rate
 			Param: fs_sensitivity_default
 			Param: fs_spread_deposits
@@ -646,6 +704,8 @@ Label Root
 		Param: switch_interest_investment
 		Param: switch_interest_payment
 		Param: switch_monetary_policy
+		Param: switch_foroward_looking
+		Param: switch_household_tax_structure
 		Var: Country_Annual_CPI_Inflation
 		Var: Country_Annual_GDP
 		Var: Country_Annual_Growth
@@ -707,7 +767,6 @@ Label Root
 		Var: Exit_Deposits_Distributed
 		Var: Exit_Productive_Capacity
 		Var: Loans_Distribution_Firms
-		Param: switch_foroward_looking
 
 	}
 
@@ -745,6 +804,8 @@ Param: switch_fixed_bank_profit_distribution 0 n + n n	0
 Param: switch_interest_investment 0 n + n n	2
 Param: switch_interest_payment 0 n + n n	0
 Param: switch_monetary_policy 0 n + n n	1
+Param: switch_foroward_looking 0 n + n n	0
+Param: switch_household_tax_structure 0 n - n n	0
 Var: Country_Annual_CPI_Inflation 1 s + n n	0
 Var: Country_Annual_GDP 0 s + n n
 Var: Country_Annual_Growth 1 s + n n	0
@@ -806,20 +867,77 @@ Var: Exit_Defaulted_Loans 0 s + n n
 Var: Exit_Deposits_Distributed 0 s + n n
 Var: Exit_Productive_Capacity 0 n + n n
 Var: Loans_Distribution_Firms 0 n + n n
-Param: switch_foroward_looking 0 n + n n	0
 
-Object: HOUSEHOLDS C	1
-Var: Household_Real_Disposable_Income 1 n + n n	0
-Var: Household_Nominal_Disposable_Income 1 n + n n	0
-Var: Household_Stock_Deposits 1 n + n n	0
-Var: Household_Stock_Loans 1 n + n n	0
-Var: Household_Debt_Rate 1 n + n n	0
-Var: Household_Avg_Nominal_Income 1 n - n n	0
-Var: Household_Avg_Real_Income 1 n - n n	0
-Var: Household_Liquidity_Preference 1 n - n n	0
-Var: Household_Max_Debt_Rate 1 n - n n	0
+Object: HOUSEHOLDS C	100
+Var: Household_Real_Disposable_Income 1 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Var: Household_Nominal_Disposable_Income 1 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Var: Household_Stock_Deposits 1 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Var: Household_Stock_Loans 1 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Var: Household_Debt_Rate 1 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Var: Household_Avg_Nominal_Income 1 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Var: Household_Avg_Real_Income 1 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Var: Household_Liquidity_Preference 1 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Var: Household_Max_Debt_Rate 1 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Var: Household_Employment_Status 1 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Var: Household_Available_Deposits 0 n + n n
+Var: Household_Avg_Debt_Rate 0 n + n n
+Var: Household_Avg_Interest_Rate 0 n + n n
+Var: Household_Debt_Payment 0 n + n n
+Var: Household_Debt_Share 0 n + n n
+Var: Household_Demand_Loans 0 n + n n
+Var: Household_Deposits_Return 0 n + n n
+Var: Household_Desired_Expenses 0 n + n n
+Var: Household_Effective_Expenses 0 n + n n
+Var: Household_Effective_Loans 0 n + n n
+Var: Household_Effective_Real_Domestic_Consumption 0 n + n n
+Var: Household_Effective_Real_Imported_Consumption 0 n + n n
+Var: Household_Financial_Obligations 0 n + n n
+Var: Household_Funds 0 n + n n
+Var: Household_Imports_Share 0 n + n n
+Var: Household_Income_Share 0 n + n n
+Var: Household_Interest_Payment 0 n + n n
+Var: Household_Interest_Rate 0 n + n n
+Var: Household_Internal_Funds 0 n + n n
+Var: Household_Max_Loans 0 n + n n
+Var: Household_Maximum_Expenses 0 n + n n
+Var: Household_Net_Wealth 0 n + n n
+Var: Household_Nominal_Gross_Income 0 n + n n
+Var: Household_Propensity_to_Spend 0 n + n n
+Var: Household_Real_Autonomous_Consumption 0 n + n n
+Var: Household_Real_Desired_Domestic_Consumption 0 n + n n
+Var: Household_Real_Desired_Imported_Consumption 0 n + n n
+Var: Household_Real_Domestic_Consumption_Demand 0 n + n n
+Var: Household_Real_Imported_Consumption_Demand 0 n + n n
+Var: Household_Retained_Deposits 0 n + n n
+Var: Household_Taxation 0 n + n n
+Var: Household_Wage_Income 0 n + n n
+Var: Household_Profit_Income 0 n + n n
+Var: Household_Wealth_Share 0 n + n n
+Param: household_avg_autonomous_consumption_adjustment 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_autonomous_consumption_adjustment 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_avg_debt_rate_adjustment 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_debt_rate_adjustment 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_avg_import_propensity 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_import_propensity 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_avg_liquidity_preference_adjustment 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_liquidity_preference_adjustment 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_direct_tax 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_elasticity_base_factor 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_profit_participation_rate 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_profit_lambda 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_profit_q 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_profit_share 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_propensity_min 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_propensity_midpoint 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_propensity_steepness 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_skill 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_wage_mean 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_wage_stddev 0 n + n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
 
-Object: HOUSEHOLD_LOANS C	1
+Object: HOUSEHOLD_LOANS C	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1
+Param: household_loan_fixed_amortization 0 n - n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_loan_interest_rate 0 n - n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Param: household_loan_total_amount 0 n - n n	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
 
 Object: EXTERNAL_SECTOR C	1
 Param: exchange_rate_adjustment 0 n + n n	1
@@ -859,9 +977,9 @@ Param: fs_number_object_banks 0 n + n n	10
 Param: fs_price_strategy_long_term 0 n + n n	1
 Param: fs_price_strategy_short_term 0 n + n n	1
 Param: fs_profit_distribution_rate 0 n + n n	0.9
-Param: fs_risk_premium_class 0 n + n n	0
 Param: fs_risk_premium_long_term 0 n + n n	0
 Param: fs_risk_premium_short_term 0 n + n n	0
+Param: fs_risk_premium_household 0 n - n n	0
 Param: fs_sensitivity_debt_rate 0 n + n n	0.1
 Param: fs_sensitivity_default 0 n + n n	0.1
 Param: fs_spread_deposits 0 n + n n	0.1
@@ -1521,6 +1639,16 @@ _INIT_
 All 1 instances equal to 1.
 END_DESCRIPTION
 
+Parameter_switch_foroward_looking
+
+_INIT_
+All 1 instances equal to 0.
+END_DESCRIPTION
+
+Parameter_switch_household_tax_structure
+
+END_DESCRIPTION
+
 Variable_Country_Annual_CPI_Inflation
 Annual growth of the consumer price indexAnnual growth of the consumer price index
 END_DESCRIPTION
@@ -1773,12 +1901,6 @@ Variable_Loans_Distribution_Firms
 Distributed effective loans to firms if there is credit rationingDistributed effective loans to firms if there is credit rationing
 END_DESCRIPTION
 
-Parameter_switch_foroward_looking
-
-_INIT_
-All 1 instances equal to 0.
-END_DESCRIPTION
-
 Object_HOUSEHOLDS
 
 END_DESCRIPTION
@@ -1837,7 +1959,300 @@ Each household adjusts its debt rate based on income changes over time.
 Uses persistent household-specific adjustment parameters for heterogeneity.
 END_DESCRIPTION
 
+Variable_Household_Employment_Status
+Determines household employment status based on labor market matching.
+0 = unemployed, 1 = employed in consumption sector, 2 = employed in capital sector, 3 = employed in input sector
+END_DESCRIPTION
+
+Variable_Household_Available_Deposits
+Household available deposits after expenses and financial obligations.
+Ensures that deposits remain non-negative.
+END_DESCRIPTION
+
+Variable_Household_Avg_Debt_Rate
+Household avg debt rate of the last household period (equal to annual period)
+END_DESCRIPTION
+
+Variable_Household_Avg_Interest_Rate
+Computes the weighted average interest rate across all households, where the weight is the outstanding stock of loans.
+END_DESCRIPTION
+
+Variable_Household_Debt_Payment
+Sum up total debt payment on all household loans.
+Amortizations are fixed for each loan.
+Once a loan is fully repaid, it is automatically deleted.
+END_DESCRIPTION
+
+Variable_Household_Debt_Share
+Share of total household debt (absolute value of negative net wealth).
+Only households with negative net wealth are included. Others get zero.
+END_DESCRIPTION
+
+Variable_Household_Demand_Loans
+Household loan demand is determined as the amount of desired expenses that internal funds cannot cover.
+Households will only borrow up to the maximum allowable amount.
+END_DESCRIPTION
+
+Variable_Household_Deposits_Return
+Net return on household deposits.
+Interest earned on both available and retained deposits.
+END_DESCRIPTION
+
+Variable_Household_Desired_Expenses
+Household nominal desired expenses depend on:
+1. Effective domestic consumption * domestic price
+2. Effective imported consumption * foreign price * exchange rate
+END_DESCRIPTION
+
+Variable_Household_Effective_Expenses
+Household effective expenses is the sum of effective domestic consumption and effective imports, in nominal values.
+END_DESCRIPTION
+
+Variable_Household_Effective_Loans
+Household effective loans represent the amount of loans that the financial sector was able to provide.
+A new loan object is created for each borrowing household.
+END_DESCRIPTION
+
+Variable_Household_Effective_Real_Domestic_Consumption
+Household effective real domestic consumption, depending on how much the domestic consumption goods sector was able to meet demand.
+END_DESCRIPTION
+
+Variable_Household_Effective_Real_Imported_Consumption
+Household effective external consumption, depending on desired level of imports plus the demand not met by the domestic production.
+Sector_Demand_Met_By_Imports is a binary variable (0 or 1) that indicates whether extra imports are available to meet unmet domestic demand.
+When 1, households can import the amount not met by domestic production; when 0, they cannot.
+
+The equation has two components:
+1. Extra imports to meet unmet domestic demand: (1-v[0])*v[1]*v[3]
+   - (1-v[0]) is the percentage of domestic demand not met
+   - v[1] is whether extra imports are available (0 or 1)
+   - v[3] is the original domestic consumption demand
+2. Plus the desired imported consumption: v[4]
+END_DESCRIPTION
+
+Variable_Household_Financial_Obligations
+Household Financial Obligations in the current period is the sum of interest payment and debt payment.
+This represents the total amount a household must pay to service its loans.
+END_DESCRIPTION
+
+Variable_Household_Funds
+Total available funds for household expenses in the current period.
+Calculated as the sum of internal funds (after debt payments) and new loans.
+END_DESCRIPTION
+
+Variable_Household_Imports_Share
+Calculates the import share where propensity to import is a fixed,
+innate household characteristic, while price elasticity to import is a
+dynamic hyperbolic function of the household's income relative to the mean.
+END_DESCRIPTION
+
+Variable_Household_Income_Share
+Calculates this household's income percentile (0-1) relative to all households.
+This variable is updated once every annual_frequency.
+Uses SORTS to sort all households by income, then SEARCH_INSTS to find this
+household's rank directly.Household share of total nominal disposable income across all households.
+END_DESCRIPTION
+
+Variable_Household_Interest_Payment
+Calculates total interest payment on all household loans. Interest rates can be fixed or flexible
+
+switch_interest_payment
+0-->fixed interest, defined when the loan was taken
+1-->flexible interest, the rate is calculated evert period
+END_DESCRIPTION
+
+Variable_Household_Interest_Rate
+Interest rates paid by households, including heterogeneous risk premiums.
+END_DESCRIPTION
+
+Variable_Household_Internal_Funds
+Total available funds for household expenses in the current period.
+Accounts for past savings, disposable income, financial obligations, and retained deposits.
+END_DESCRIPTION
+
+Variable_Household_Max_Loans
+Household available debt depends on the difference between desired stock of debt and current stock of debt.
+If the household's current debt exceeds its desired debt, it must reduce borrowing. 
+Otherwise, the difference represents the maximum possible new loan amount.
+END_DESCRIPTION
+
+Variable_Household_Maximum_Expenses
+Nominal value of possible expenses, restricted to the amount of funds available.
+Households cannot spend more than what they have.
+END_DESCRIPTION
+
+Variable_Household_Net_Wealth
+Household net wealth = deposits (assets) minus loans (liabilities).
+This is the true measure of household wealth that accounts for both assets and debt.
+Positive values indicate net wealth, negative values indicate net debt.
+END_DESCRIPTION
+
+Variable_Household_Nominal_Gross_Income
+
+END_DESCRIPTION
+
+Variable_Household_Propensity_to_Spend
+Dynamic propensity to spend based on household income relative to median income.
+Uses a sigmoid function: y = (1-n)(1/(1+exp(k*(x-x0)))) + n
+where:
+- x = household_income / median_income (relative income ratio)
+- k = household_propensity_steepness (controls how quickly propensity changes with income)
+- x0 = household_propensity_midpoint (income level where propensity = 0.5)
+- n = household_propensity_min (minimum propensity, creates range from n to 1)
+
+The function creates a "Keeping up with the Joneses" effect portraying an unequal economy:
+households compare their consumption to the median household. (Duesenberry, 1949)
+END_DESCRIPTION
+
+Variable_Household_Real_Autonomous_Consumption
+Household autonomous consumption depends on the average quality growth of the consumption goods sector.
+Heterogeneity is introduced through persistent household-specific adjustment parameters assigned at initialization.
+END_DESCRIPTION
+
+Variable_Household_Real_Desired_Domestic_Consumption
+Household real domestic consumption incorporates heterogeneity in propensity to consume.
+END_DESCRIPTION
+
+Variable_Household_Real_Desired_Imported_Consumption
+Sum of loan principal repayments made by all householdsHousehold real imported consumption depends on:
+1. Effective domestic consumption * domestic price
+2. Effective imported consumption * foreign price * exchange rate
+END_DESCRIPTION
+
+Variable_Household_Real_Domestic_Consumption_Demand
+Household effective real domestic consumption.
+Determined by desired consumption levels and constrained by available funds.
+If budget is insufficient, spending is adjusted proportionally.
+END_DESCRIPTION
+
+Variable_Household_Real_Imported_Consumption_Demand
+
+END_DESCRIPTION
+
+Variable_Household_Retained_Deposits
+Household retained deposits at the current period. 
+Based on household liquidity preference and long-term income trends.
+Ensures households do not go into debt to retain liquidity.
+END_DESCRIPTION
+
+Variable_Household_Taxation
+Calculates household wage income as sector wage � persistent household skill.
+Heterogeneity comes from the persistent skill assigned at initialization.
+Wage is updated only annually (wage stickiness).
+END_DESCRIPTION
+
+Variable_Household_Wage_Income
+Profit income received by the household.
+Uses persistent q-exponential-distributed share coefficient set at initialization.
+Each household gets its fixed share of total distributed profits.Calculates household wage income as sector wage � persistent household skill.
+Heterogeneity comes from the persistent skill assigned at initialization.
+Wage is updated only annually (wage stickiness).
+END_DESCRIPTION
+
+Variable_Household_Profit_Income
+Profit income received by the household.
+Uses persistent q-exponential-distributed share coefficient set at initialization.
+Each household gets its fixed share of total distributed profits.
+END_DESCRIPTION
+
+Variable_Household_Wealth_Share
+Share of total positive net wealth.
+Only households with positive net wealth are included.
+END_DESCRIPTION
+
+Parameter_household_avg_autonomous_consumption_adjustment
+
+END_DESCRIPTION
+
+Parameter_household_autonomous_consumption_adjustment
+
+END_DESCRIPTION
+
+Parameter_household_avg_debt_rate_adjustment
+
+END_DESCRIPTION
+
+Parameter_household_debt_rate_adjustment
+
+END_DESCRIPTION
+
+Parameter_household_avg_import_propensity
+
+END_DESCRIPTION
+
+Parameter_household_import_propensity
+
+END_DESCRIPTION
+
+Parameter_household_avg_liquidity_preference_adjustment
+
+END_DESCRIPTION
+
+Parameter_household_liquidity_preference_adjustment
+
+END_DESCRIPTION
+
+Parameter_household_direct_tax
+
+END_DESCRIPTION
+
+Parameter_household_elasticity_base_factor
+
+END_DESCRIPTION
+
+Parameter_household_profit_participation_rate
+
+END_DESCRIPTION
+
+Parameter_household_profit_lambda
+
+END_DESCRIPTION
+
+Parameter_household_profit_q
+
+END_DESCRIPTION
+
+Parameter_household_profit_share
+
+END_DESCRIPTION
+
+Parameter_household_propensity_min
+
+END_DESCRIPTION
+
+Parameter_household_propensity_midpoint
+
+END_DESCRIPTION
+
+Parameter_household_propensity_steepness
+
+END_DESCRIPTION
+
+Parameter_household_skill
+
+END_DESCRIPTION
+
+Parameter_household_wage_mean
+
+END_DESCRIPTION
+
+Parameter_household_wage_stddev
+
+END_DESCRIPTION
+
 Object_HOUSEHOLD_LOANS
+
+END_DESCRIPTION
+
+Parameter_household_loan_fixed_amortization
+
+END_DESCRIPTION
+
+Parameter_household_loan_interest_rate
+
+END_DESCRIPTION
+
+Parameter_household_loan_total_amount
 
 END_DESCRIPTION
 
@@ -2035,12 +2450,6 @@ _INIT_
 All 1 instances equal to 0.9.
 END_DESCRIPTION
 
-Parameter_fs_risk_premium_class
-determines the risk premium on debt rate applied to class' loans
-_INIT_
-All 1 instances equal to 0.
-END_DESCRIPTION
-
 Parameter_fs_risk_premium_long_term
 determines the risk premium on debt rate applied to firms' long term loans
 _INIT_
@@ -2051,6 +2460,10 @@ Parameter_fs_risk_premium_short_term
 determines the risk premium on debt rate applied to firms' short term loans
 _INIT_
 All 1 instances equal to 0.
+END_DESCRIPTION
+
+Parameter_fs_risk_premium_household
+
 END_DESCRIPTION
 
 Parameter_fs_sensitivity_debt_rate
