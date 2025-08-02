@@ -588,14 +588,12 @@ v[3] = (v[0] + v[1]) * v[2];   // Total interest income from deposits
 RESULT(v[3])  // Return the household's deposit earnings
 
 
-//////////////////////////////////////////////
-///////////// BOTTOM-UP APPROACH /////////////
-//////////////////////////////////////////////
-
 
 EQUATION("Household_Employment_Status")
 /*
 Markov matrix process for employment/unemployment status with persistency.
+Only worker households (household_type == 0) participate in employment dynamics.
+Capitalist households (household_type == 1) are excluded from employment status.
 
     From\To    Unemployed  Cons_Sector  Cap_Sector  Input_Sector
     Unemployed    1-v[7]     v[7]*p1      v[7]*p2     v[7]*p3
@@ -603,124 +601,123 @@ Markov matrix process for employment/unemployment status with persistency.
     Cap_Sector    1-v[7]        0          v[7]         0
     Input_Sector  1-v[7]        0           0          v[7]
 
-V[1] = 0: unemployed
-V[1] = 1: employed in consumption sector
-V[1] = 2: employed in capital sector
-V[1] = 3: employed in input sector
+V[8] = 0: unemployed (worker households only)
+V[8] = 1: employed in consumption sector (worker households only)
+V[8] = 2: employed in capital sector (worker households only)
+V[8] = 3: employed in input sector (worker households only)
+V[8] = -1: capitalist household (not applicable for employment)
 */
 
-v[0] = CURRENT; // Last period's employment status (0=unemployed, 1,2,3 = sectors)
-v[2] = VS(consumption, "Sector_Employment");
-v[3] = VS(capital, "Sector_Employment");
-v[4] = VS(input, "Sector_Employment");
-v[5] = v[2] + v[3] + v[4]; // Total employment demand
-v[6] = VS(country, "Country_Total_Population");
-v[7] = v[5] / v[6]; // Employment rate
-
-if (v[0] == 0) // Unemployed last period
-{
-    // Pro-cyclical hiring: Higher employment rate → easier to find jobs
-    if (RND < v[7]) {
-        // Assign sector based on relative demand
-        v[9] = RND;
-        v[10] = v[2] / v[5];
-        v[11] = v[3] / v[5];
-        if (v[9] < v[10])
-            v[1] = 1;
-        else if (v[9] < v[10] + v[11])
-            v[1] = 2;
-        else
-            v[1] = 3;
-    } else {
-        v[1] = 0; // Remain unemployed
+    v[0] = CURRENT; // Last period's employment status (0 = unemployed; 1,2,3 = sectors' employment; -1 = capitalist)
+    v[1] = V("household_type"); // Household type (0=worker, 1=capitalist)
+    
+    // Capitalist households are excluded from employment status
+    if(v[1] == 1) // Capitalist household
+    {
+        v[8] = -1; // Capitalists have no employment status
     }
-}
-else // Employed last period
-{
-    // Counter-cyclical firing: Higher unemployment rate → easier to lose jobs
-    if (RND < (1 - v[7])) {
-        v[1] = 0; // Fired, become unemployed
-    } else {
-        v[1] = v[0]; // Stay employed in same sector
-    }
-}
+    else // Worker households participate in employment dynamics
+    {
+        v[2] = VS(consumption, "Sector_Employment");
+        v[3] = VS(capital, "Sector_Employment");
+        v[4] = VS(input, "Sector_Employment");
+        v[5] = v[2] + v[3] + v[4]; // Total employment demand
+        v[6] = VS(country, "Country_Total_Population");
+        v[12] = V("capitalist_population_share");
+        v[13] = round(v[6] * (1 - v[12])); // Labor force = Total Population - Capitalists
+        v[7] = v[5] / v[13]; // Employment rate = Jobs / Labor Force (correct)
 
-RESULT(v[1])
+        if (v[0] == 0) // Unemployed last period
+        {
+            // Pro-cyclical hiring: Higher employment rate → easier to find jobs
+            if (RND < v[7]) {
+                // Assign sector based on relative demand using probabilistic approach
+                v[9] = v[2] / v[5];  // Probability of being employed in consumption sector
+                v[10] = v[3] / v[5]; // Probability of being employed in capital sector
+                v[11] = RND; // Random number between 0 and 1
+                if (v[11] < v[9])
+                    v[8] = 1; // Employed in consumption sector
+                else if (v[11] < v[9] + v[10])
+                    v[8] = 2; // Employed in capital sector
+                else
+                    v[8] = 3; // Employed in input sector
+            } else {
+                v[8] = 0; // Remain unemployed
+            }
+        }
+        else // Employed last period
+        {
+            // Counter-cyclical firing: Higher unemployment rate → easier to lose jobs
+            if (RND < (1 - v[7])) {
+                v[8] = 0; // Fired, become unemployed
+            } else {
+                v[8] = v[0]; // Stay employed in same sector
+            }
+        }
+    }
+
+RESULT(v[8])
 
 
 
 EQUATION("Household_Wage_Income")
 /*
-Calculates household wage income as sector wage � persistent household skill.
+Calculates household wage income as sector wage * persistent household skill.
+Only worker households (household_type == 0) who are employed receive wage income.
 Heterogeneity comes from the persistent skill assigned at initialization.
 Wage is updated only annually (wage stickiness).
 */
 
-v[0] = V("Household_Employment_Status");  // Employment status (0=unemployed, 1-3=employed)
-v[1] = 0;  // Initialize wage income
+    v[0] = V("Household_Employment_Status");  // Employment status (0=unemployed, 1-3=employed, -1=capitalist)
+    v[1] = V("household_type");  // Household type (0=worker, 1=capitalist)
+    v[2] = 0;  // Initialize wage income
 
-if(v[0] > 0)  // If employed
-{
-    // Get sector-specific wage
-    if(v[0] == 1)  // Employed in consumption sector
+    // Only worker households who are employed receive wage income
+    if(v[1] == 0 && v[0] > 0)  // Worker household AND employed
     {
-        v[2] = VS(consumption, "Sector_Avg_Wage");
-    }
-    else if(v[0] == 2)  // Employed in capital sector
-    {
-        v[2] = VS(capital, "Sector_Avg_Wage");
-    }
-    else if(v[0] == 3)  // Employed in input sector
-    {
-        v[2] = VS(input, "Sector_Avg_Wage");
+        // Get sector-specific wage
+        if(v[0] == 1)  // Employed in consumption sector
+        {
+            v[3] = VS(consumption, "Sector_Avg_Wage");
+        }
+        else if(v[0] == 2)  // Employed in capital sector
+        {
+            v[3] = VS(capital, "Sector_Avg_Wage");
+        }
+        else if(v[0] == 3)  // Employed in input sector
+        {
+            v[3] = VS(input, "Sector_Avg_Wage");
+        }
+
+        // Set household_skill_mean = -0.5 * (household_skill_stddev)^2 to ensure E[household_skill] = 1
+        v[7] = V("household_skill"); // persistent skill assigned at init
+
+        v[2] = v[3] * v[7];
     }
 
-    // Set household_skill_mean = -0.5 * (household_skill_stddev)^2 to ensure E[household_skill] = 1
-    v[7] = V("household_skill"); // persistent skill assigned at init
-
-    v[1] = v[2] * v[7];
-}
-
-RESULT(v[1])
+RESULT(v[2])
 
 
 
 EQUATION("Household_Profit_Income")
 /*
-Profit income received by the household.
+Profit income received only by capitalist households (household_type == 1).
 Uses persistent q-exponential-distributed share coefficient set at initialization.
-Each household gets its fixed share of total distributed profits.
+Each capitalist household gets its fixed share of total distributed profits.
 */
 
-    v[0] = V("household_profit_share");  // Persistent profit share coefficient (set at initialization)
-v[1] = VS(country, "Country_Distributed_Profits");  // Total profits distributed in the economy
+    v[0] = V("household_type");  // Household type (0=worker, 1=capitalist)
+    v[1] = 0;  // Initialize profit income
 
-RESULT(v[0] * v[1])
+    // Only capitalist households receive profit income
+    if(v[0] == 1)  // Capitalist household
+    {
+        v[2] = V("household_profit_share");  // Persistent profit share coefficient (set at initialization)
+        v[3] = VS(country, "Country_Distributed_Profits");  // Total profits distributed in the economy
+        v[1] = v[2] * v[3];
+    }
 
-/*
-EQUATION("Household_Profit_Income")		// WAGE-PROFIT WEAK CORRELATION
-
-//Household profit income is drawn from a Pareto-Tsallis distribution.
-//Higher wages increase the likelihood of earning profit income, introducing weak correlation.
-
-v[0] = V("profit_distribution_minimum");  // Minimum profit threshold
-v[1] = V("profit_distribution_exponent"); // Pareto-Tsallis exponent
-v[2] = V("profit_distribution_q");        // Tsallis deformation parameter
-
-v[3] = V("Household_Wage_Income");  // Household wage income
-
-// Define correlation factor: higher wage earners are more likely to have profit income
-v[4] = max(0, (v[3] - V("profit_correlation_wage_threshold")) / V("profit_correlation_slope"));
-v[5] = min(1, v[4]); // Probability factor ensuring a valid probability range [0,1]
-
-// Draw profit income based on probability factor
-if (RND < v[5])  
-    v[6] = pareto_tsallis(v[0], v[1], v[2]); // Profit income for high-wage earners
-else
-    v[6] = 0; // Low-wage earners are less likely to receive profit income
-
-RESULT(v[6])
-*/
+RESULT(v[1])
 
 
 
@@ -729,13 +726,13 @@ EQUATION("Household_Nominal_Disposable_Income")
 Household net nominal income is calculated using a bottom-up approach, summing individual wage and profit incomes, interest received on deposits, and unemployment benefits.
 Taxation is applied based on the chosen tax structure.
 
-switch_household_tax_structure:
-0 --> No Tax
-1 --> Only Wages
-2 --> Only Profits
-3 --> Wages and Profits
-4 --> Wages, Profits, Interest
-5 --> Wages, Profits, Interest, Wealth
+    switch_household_tax_structure:
+    0 --> No Tax
+    1 --> Only Wages
+    2 --> Only Profits
+    3 --> Wages and Profits
+    4 --> Wages, Profits, Interest
+    5 --> Wages, Profits, Interest, Wealth
 */
 
     v[0] = V("Household_Profit_Income");  // Household-specific profit income
@@ -746,9 +743,18 @@ switch_household_tax_structure:
     v[5] = V("switch_household_tax_structure"); // Switch: determines tax structure
 
     // --- Unemployment Benefits Allocation ---
-    // Allocate unemployment benefits equally among all unemployed households
-    v[6] = VS(country, "Country_Unemployed_Count"); // Use the pre-calculated count of unemployed households
-    v[7] = (v[6] > 0) ? v[3] / v[6] : 0;  // Distribute equally if unemployed households exist
+    // Allocate unemployment benefits equally among unemployed worker households only
+    v[6] = VS(country, "Country_Unemployed_Households"); // Use the pre-calculated count of unemployed worker households
+    v[7] = 0; // Initialize unemployment benefits for this household
+    
+    // Only worker households who are unemployed receive unemployment benefits
+    v[10] = V("household_type"); // Household type (0=worker, 1=capitalist)
+    v[11] = V("Household_Employment_Status"); // Employment status (0=unemployed, 1-3=employed, -1=capitalist)
+    
+    if(v[10] == 0 && v[11] == 0) // Worker household AND unemployed
+    {
+        v[7] = (v[6] > 0) ? v[3] / v[6] : 0;  // Distribute equally if unemployed worker households exist
+    }
 
     // --- Compute Gross Postbenefit Income ---
     v[12] = v[0] + v[1] + v[7];  // Gross total income (wages + profits + benefits)

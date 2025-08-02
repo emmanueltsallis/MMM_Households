@@ -171,160 +171,93 @@ v[159]=V("scale_debt"); // Scale debt
 		}
 
 
-//Calculate average sector wage for propensity calculation baseline
+// Calculate average sector wage for propensity calculation baseline
 v[169] = (v[50] + v[51] + v[52]) / 3; // Average sector wage (baseline for comparison)
 
-//Begin Writing Household Variables
+// ============================================================================
+// BEGIN HOUSEHOLD INITIALIZATION
+// ============================================================================
+
+// Setup household type assignment parameters (workers vs capitalists)
+v[252] = VS(country, "Country_Total_Population"); // Total population
+v[253] = V("capitalist_population_share"); // Capitalist population share (e.g., 0.05 for 5%)
+v[254] = round(v[252] * v[253]); // Number of capitalists
+v[255] = 0; // Counter for capitalists assigned
+
 CYCLE(cur, "HOUSEHOLDS") // Cycle through all households
 {
-    // Initialize household-specific parameters with random variations around base values
-    v[163] = v[26];  // Flat tax rate for all households
-    v[164] = max(0, min(1, v[27] * norm(1.0, 0.20)));  // Household-specific import propensity (normal distribution, ?=0.20)
-    v[166] = max(0, min(1, v[31] * norm(1.0, 0.20)));  // Household-specific autonomous consumption adjustment (normal distribution, ?=0.20)
-
-    // Assign persistent skill to each household (log-normal distribution)
-    v[100] = lnorm(v[29], v[30]);  // Set household_skill_mean = -0.5 * (household_skill_stddev)^2 to ensure E[household_skill] = 1
-
-    // Determine initial employment status using Markov chain logic
-    // Get total employment demand from all sectors
-    v[180] = VS(consumption, "Sector_Employment");
-    v[181] = VS(capital, "Sector_Employment");
-    v[182] = VS(input, "Sector_Employment");
-    v[183] = v[180] + v[181] + v[182];  // Total employment demand
-    v[184] = VS(country, "Country_Total_Population");
-    v[185] = v[183] / v[184];  // Employment rate
-
-    // Determine initial employment status
-    v[161] = 0;  // Default to unemployed (no wage income)
-    
-    if (RND < v[185])  // Get employed based on employment rate
+    // Step 1. Assign household type (0 = worker, 1 = capitalist)
+    if (v[255] < v[254]) // Assign a fixed number of capitalist households
     {
-        // Assign to sector based on relative employment demand
-        v[186] = RND;
-        v[187] = v[180] / v[183];  // Consumption sector share
-        v[188] = v[181] / v[183];  // Capital sector share
-        
-		v[189] = v[100];  // Use local variable instead of reading from household object
-
-        if (v[186] < v[187])
-        {
-            // Employed in consumption sector - use actual sector wage
-            v[161] = v[50] * v[189];  // sector_initial_wage * household_skill
-        }
-        else if (v[186] < v[187] + v[188])
-        {
-            // Employed in capital sector - use actual sector wage
-            v[161] = v[51] * v[189];  // sector_initial_wage * household_skill
-        }
-        else
-        {
-            // Employed in input sector - use actual sector wage
-            v[161] = v[52] * v[189];  // sector_initial_wage * household_skill
-        }
-    } // If not employed, v[161] remains 0
-
-	v[162] = 0;  // Initial profit income set to 0 (will be calculated during simulation using profit shares)
-
-    // Initialize employment status based on the employment determination above
-    if (v[161] > 0)  // If household has wage income, it's employed
-    {
-        if (v[186] < v[187])
-            WRITES(cur, "Household_Employment_Status", 1);  // Employed in consumption sector
-        else if (v[186] < v[187] + v[188])
-            WRITES(cur, "Household_Employment_Status", 2);  // Employed in capital sector
-        else
-            WRITES(cur, "Household_Employment_Status", 3);  // Employed in input sector
+        WRITES(cur, "household_type", 1); // Capitalist household
+        v[255]++;
     }
     else
     {
-        WRITES(cur, "Household_Employment_Status", 0);  // Unemployed
+        WRITES(cur, "household_type", 0); // Worker household
     }
 
-    // Calculate initial disposable income for this household
-    v[167] = (v[161] + v[162]) * (1 - v[163]); // Income * (1 - household tax rate)
-    
-    // Calculate propensity to spend using direct income-based approach
-    v[168] = v[161] + v[162]; // Total gross income
-    v[172] = v[168] / v[169];  // Relative to average sector wage
-    
-    // Get propensity parameters
-    v[190] = V("household_propensity_min");        // Minimum propensity bound
-    v[191] = V("household_propensity_steepness");  // Steepness parameter
-    v[192] = V("household_propensity_midpoint");   // Midpoint parameter
-    
-    // Income-relative propensity relationship using sigmoid function
-    // Lower income households (v[172] < 1) get higher propensity, higher income households (v[172] > 1) get lower
-    v[173] = 1 / (1 + exp(v[191] * (v[172] - v[192])));  // Base sigmoid function
-    v[174] = (1 - v[190]) * v[173] + v[190];  // Scale and shift: (1-min) * sigmoid + min
-    v[175] = min(1, v[174]);  // Cap maximum at 1
+    // Step 2. Set persistent household parameters with random variations
+    WRITES(cur, "household_skill", lnorm(v[29], v[30])); // Log-normal distributed skill
+    WRITES(cur, "household_direct_tax", v[26]); // Flat tax rate for all households
+    WRITES(cur, "household_import_propensity", max(0, min(1, v[27] * norm(1.0, 0.20)))); // Household-specific import propensity
+    WRITES(cur, "household_autonomous_consumption_adjustment", max(0, min(1, v[31] * norm(1.0, 0.20)))); // Household-specific autonomous consumption adjustment
+    WRITES(cur, "household_liquidity_preference_adjustment", max(0, min(1, v[32] * norm(1.0, 0.5)))); // Household-specific liquidity preference adjustment
+    WRITES(cur, "household_debt_rate_adjustment", max(0, min(1, v[33] * norm(1.0, 0.4)))); // Household-specific debt rate adjustment
 
-    // Initialize household lagged variables and stocks
-    // Use v[101] = consumption sector price, Country_Total_Population = number of households, v[6]=total autonomous consumption scale
-	for (i=1; i<=V("annual_frequency"); i++)		// Loop for each period in a year
+    // Step 3. Set employment status and profit shares based on household type
+    if (VS(cur, "household_type") == 1) // Capitalist household
+    {
+        WRITES(cur, "Household_Employment_Status", -1); // Capitalists have no employment status
+        WRITES(cur, "household_profit_share", qexponential(v[25], v[23])); // q-Exponential distributed profit share
+    }
+    else // Worker household
+    {
+        WRITES(cur, "Household_Employment_Status", 0); // Workers start unemployed
+        WRITES(cur, "household_profit_share", 0); // Workers do not participate in profit distribution
+    }
+
+    // Step 4. Initialize all lagged variables and stocks to zero (since all households start with zero income)
+	for (i=1; i<=V("annual_frequency"); i++)
 		{
-		WRITELLS(cur, "Household_Nominal_Disposable_Income", v[167], 0, i);    		// Set initial nominal income for each lag
-		WRITELLS(cur, "Household_Real_Disposable_Income", (v[167]/v[101]), 0, i);   // Set initial real income for each lag
+        WRITELLS(cur, "Household_Nominal_Disposable_Income", 0, 0, i); // Zero initial nominal income
+        WRITELLS(cur, "Household_Real_Disposable_Income", 0, 0, i); // Zero initial real income
 		}
-    WRITELLS(cur, "Household_Avg_Nominal_Income", v[167], 0, 1);
-    WRITELLS(cur, "Household_Avg_Real_Income", (v[167]/v[101]), 0, 1);
+    
+    // Set initial average income and consumption variables
+    WRITELLS(cur, "Household_Avg_Nominal_Income", 0, 0, 1); // Zero initial average nominal income
+    WRITELLS(cur, "Household_Avg_Real_Income", 0, 0, 1); // Zero initial average real income
     WRITELLS(cur, "Household_Real_Autonomous_Consumption", v[6]/VS(country, "Country_Total_Population"), 0, 1); // Distribute total autonomous consumption evenly
-    WRITELLS(cur, "Household_Liquidity_Preference", 0, 0, 1); // 0 initial liquidity preference
-    WRITELLS(cur, "Household_Max_Debt_Rate", 0, 0, 1);      // 0 initial max debt rate
-    WRITELLS(cur, "Household_Debt_Rate", 0, 0, 1);              // 0, no debt initially
-    WRITELLS(cur, "Household_Stock_Deposits", 0, 0, 1);         // 0 initial deposits
-    WRITELLS(cur, "Household_Stock_Loans", 0, 0, 1);            // 0 initial loans
-
-    // Store household-specific parameters for later use if needed
-    WRITES(cur, "household_direct_tax", v[163]);
-    WRITES(cur, "household_import_propensity", v[164]);
-    WRITES(cur, "household_autonomous_consumption_adjustment", v[166]); // Store persistent autonomous consumption adjustment
     
-    // Generate persistent household-specific liquidity preference adjustment parameter
-    // Use normal distribution around the household average baseline for consistency
-    v[178] = max(0, min(1, v[32] * norm(1.0, 0.6))); // +-60% individual variation around household_avg_liquidity_preference_adjustment
-    WRITES(cur, "household_liquidity_preference_adjustment", v[178]); // Store persistent liquidity preference adjustment
-
-    // Generate persistent household-specific debt rate adjustment parameter
-    // Use normal distribution around the household average baseline for consistency
-    v[179] = max(0, min(1, v[33] * norm(1.0, 0.4))); // +-40% individual variation around household_avg_debt_rate_adjustment
-    WRITES(cur, "household_debt_rate_adjustment", v[179]); // Store persistent debt rate adjustment
-
-    // Store household skill (already calculated earlier in the loop)
-    WRITES(cur, "household_skill", v[100]); // household_skill, persistent
-    
-    // Initialize profit share coefficient using q-exponential distribution
-    // Only a fraction of households participate in profit distribution
-    v[176] = RND;  // Random draw for participation
-    if (v[176] < v[250])  // v[250] = profit_participation_rate (e.g., 0.05 for 5%)
-    {
-        // This household participates in profits - use q-exponential distribution
-        // Note: v[25] = profit_q (shape parameter), v[23] = profit_lambda (scale parameter)
-		// FOR LATER: Add a simple equation that occasionally adjusts them (e.g., every few years)
-		// Use a switch parameter to enable/disable dynamic adjustments
-        v[177] = qexponential(v[25], v[23]);  // Generate q-exponential distributed profit share
-        WRITES(cur, "household_profit_share", v[177]);
-    }
-    else
-    {
-        // This household does not participate in profits
-        WRITES(cur, "household_profit_share", 0);
-    }
+    // Initialize financial variables to zero
+    WRITELLS(cur, "Household_Liquidity_Preference", 0, 0, 1); // Zero initial liquidity preference
+    WRITELLS(cur, "Household_Max_Debt_Rate", 0, 0, 1); // Zero initial max debt rate
+    WRITELLS(cur, "Household_Debt_Rate", 0, 0, 1); // Zero initial debt rate
+    WRITELLS(cur, "Household_Stock_Deposits", 0, 0, 1); // Zero initial deposits
+    WRITELLS(cur, "Household_Stock_Loans", 0, 0, 1); // Zero initial loans
 }
 
-// Normalize profit share coefficients to sum to 1
-// This ensures that the total of all profit shares equals 1
-    v[180] = SUMS(PARENT, "household_profit_share");  // Sum of all profit shares
-if (v[180] > 0)  // Avoid division by zero
+// Step 5. Normalize profit share coefficients across all capitalist households
+// This ensures that the total of all profit shares equals 1 for proper profit distribution
+v[180] = SUMS(PARENT, "household_profit_share"); // Sum of all profit shares
+if (v[180] > 0) // Avoid division by zero
 {
     CYCLE(cur, "HOUSEHOLDS")
     {
-        v[181] = VS(cur, "household_profit_share");  // Get current profit share
-        v[182] = v[181] / v[180];  // Normalize by dividing by total
-        WRITES(cur, "household_profit_share", v[182]);  // Write normalized value
+        if (VS(cur, "household_type") == 1) // Only normalize capitalist households
+        {
+            v[181] = VS(cur, "household_profit_share"); // Get current profit share
+            v[182] = v[181] / v[180]; // Normalize by dividing by total
+            WRITES(cur, "household_profit_share", v[182]); // Write normalized value
+        }
     }
 }
 
-//Begin Writing External Variables
+// ============================================================================
+// END HOUSEHOLD INITIALIZATION
+// ============================================================================
+
+// Begin External Sector Initialization
 WRITES(external, "Country_Trade_Balance", 0);
 WRITES(external, "Country_Capital_Flows", 0);
 WRITELLS(external, "External_Income",  v[150], 0, 1);

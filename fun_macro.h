@@ -423,26 +423,13 @@ Sum up the employment of all sectors
 RESULT(SUM("Sector_Employment"))
 
 
-
-EQUATION("Country_Total_Unemployment")
+EQUATION("Country_Unemployed_Households")
 /*
-Country's total population minus the total employment
+Calculates the total number of unemployed worker households once per time step.
+Capitalist households are excluded from unemployment count.
 */
-	v[0]=V("Country_Total_Population");
-	v[1]=V("Country_Total_Employment");
-	v[2]=v[0]-v[1];
-RESULT(v[2])
-
-
-
-EQUATION("Country_Unemployment_Rate")
-/*
-Country's total unemployment over the total population
-*/
-	v[0]=V("Country_Total_Unemployment");
-	v[1]=V("Country_Total_Population");
-	v[2]=v[0]/v[1];
-RESULT(v[2])
+	v[0] = COUNT_CNDS(country, "HOUSEHOLDS", "Household_Employment_Status", "==", 0);
+RESULT(v[0])
 
 
 
@@ -709,14 +696,12 @@ RESULT(v[40])
 
 EQUATION("Country_Median_Household_Income")
 // Calculates the median household income once per time step to be used by all households.
-RESULT(MED("Household_Avg_Nominal_Income"))EQUATION("Country_Median_Household_Income")
-// Calculates the median household income once per time step to be used by all households.
 RESULT(MED("Household_Avg_Nominal_Income"))
-	
-EQUATION("Country_Unemployed_Count")
-// Calculates the total number of unemployed households once per time step.
-RESULT(COUNT_CNDS(country, "HOUSEHOLDS", "Household_Employment_Status", "==", 0))
 
+EQUATION("Country_Median_Household_Wealth")
+// Calculates the median household wealth once per time step to be used by all households.
+RESULT(MED("Household_Stock_Deposits"))
+	
 /*******************************************************************************
  Global Household Financial Aggregates (for Bank Calculations)
 *******************************************************************************/
